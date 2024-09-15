@@ -1,11 +1,13 @@
 spring:
   jpa:
+    hibernate:
+      ddl-auto: create
     properties:
       hibernate:
         format_sql: false
 
   datasource:
-    url: jdbc:h2:mem:dailog;NON_KEYWORDS=USER
+    url: jdbc:h2:mem:test;NON_KEYWORDS=USER
     username: sa
     password:
     driver-class-name: org.h2.Driver
@@ -16,6 +18,10 @@ spring:
 
   profiles:
     default: test
+
+  sql:
+    init:
+      mode: never
 
   security:
     oauth2:
@@ -37,6 +43,7 @@ spring:
             client-name: naver
             client-id: ENC(yJCSmDP1s1Azx1NRIkNJ9jzJvSAlWjWP3dC+AVczdrQ=)
             client-secret: ENC(cPDb89Z94qkO+OG3kffshTRDmof7MJ0X)
+            redirect-uri: http://localhost/login/oauth2/code/naver
             authorization-grant-type: authorization_code
             scope:
               - name
@@ -45,6 +52,7 @@ spring:
             client-name: google
             client-id: ENC(ePS0/hU7BcNsKAJraHs8PHPLq7jVAEZ5DvZgme36uzE/JFRSeY+eghmjgI+4ZlC7voM2wWX4ub96uqZ48nuTfpqgxMXOrInhdFXFLfjoaK8fnYJoSNntRQ==)
             client-secret: ENC(Qx5ssruhir7N9hdWnRpHZe11n+B7FTIQni5p1Eoq1thZFRGEXbz9J7KRtZ4pyOgZ)
+            redirect-uri: http://localhost/login/oauth2/code/google
             authorization-grant-type: authorization_code
             scope:
               - profile
@@ -53,6 +61,7 @@ spring:
             client-name: kakao
             client-id: ENC(xUux5uIT5MjtAjXF6CzhIBNA3DpPmTuP6EPlXqsOvtGXYHei0WLC+kByT7TR9FSw)
             client-secret: ENC(NUvsKwsc3xClyv+Nau68cebZI/nU80pyVOfI89KXutEAmUM9JnO52u5IStIV+Fsh)
+            redirect-uri: http://localhost/login/oauth2/code/kakao
             authorization-grant-type: authorization_code
             client-authentication-method: client_secret_post
             scope:
@@ -67,9 +76,7 @@ logging:
     sql: debug
 
 jwt:
-  jwt-key: ENC(RSGjcX9QD9BD7ylE/aUdoNv7K4DocRcCmTqkHiNN/WtrMzb5xLVHvOAeekdvxRYFaveMpetQkhI=)
+  jwt-key: Eaw/+23wN4UmcIYXGHleHIYGbsgOqiH0wISX3kfSrXA=
 
-jasypt:
-  encryptor:
-    password: ${JASYPT_ENCRYPTOR_PASSWORD}
-
+redirect:
+  url: http://localhost/oauth2-jwt-header

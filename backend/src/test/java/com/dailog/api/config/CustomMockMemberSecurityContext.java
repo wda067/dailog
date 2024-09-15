@@ -2,6 +2,8 @@ package com.dailog.api.config;
 
 import com.dailog.api.domain.Member;
 import com.dailog.api.repository.member.MemberRepository;
+import com.dailog.api.request.Join;
+import com.dailog.api.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
@@ -12,6 +14,7 @@ import org.springframework.security.test.context.support.WithSecurityContextFact
 @RequiredArgsConstructor
 public class CustomMockMemberSecurityContext implements WithSecurityContextFactory<CustomMockMember> {
 
+    private final MemberService memberService;
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -27,6 +30,7 @@ public class CustomMockMemberSecurityContext implements WithSecurityContextFacto
                 .build();
 
         memberRepository.save(member);
+        //memberService.join(Join.builder().build());
 
         CustomUserDetails customUserDetails = new CustomUserDetails(member);
         UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(

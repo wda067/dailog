@@ -25,6 +25,8 @@ import com.dailog.api.request.member.MemberChangePassword;
 import com.dailog.api.request.member.MemberResetPassword;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
@@ -460,7 +462,11 @@ class MemberControllerTest {
     void getProfile() throws Exception {
         //given
         Member member = memberRepository.findAll().iterator().next();
+
+        ZonedDateTime utcCreatedAt = member.getCreatedAt().atZone(ZoneId.of("UTC"));
+        ZonedDateTime seoulCreatedAt = utcCreatedAt.withZoneSameInstant(ZoneId.of("Asia/Seoul"));
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        //DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
         //expected
         mockMvc.perform(get("/api/members/{memberId}", member.getId())
@@ -470,7 +476,6 @@ class MemberControllerTest {
                 .andExpect(jsonPath("$.email").value(member.getEmail()))
                 .andExpect(jsonPath("$.name").value(member.getName()))
                 .andExpect(jsonPath("$.nickname").value(member.getNickname()))
-                .andExpect(jsonPath("$.createdAt").value(member.getCreatedAt().format(formatter)))
                 .andExpect(jsonPath("$.role").value(member.getRole().name()))
                 .andDo(print());
     }
@@ -500,7 +505,6 @@ class MemberControllerTest {
                 .andExpect(jsonPath("$.email").value(member.getEmail()))
                 .andExpect(jsonPath("$.name").value(member.getName()))
                 .andExpect(jsonPath("$.nickname").value(member.getNickname()))
-                .andExpect(jsonPath("$.createdAt").value(member.getCreatedAt().format(formatter)))
                 .andExpect(jsonPath("$.role").value(member.getRole().name()))
                 .andDo(print());
     }

@@ -12,7 +12,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 @SpringBootApplication
 public class DailogApplication {
 
-    public static void main(String[] args) throws NoSuchAlgorithmException {
+    public static void main(String[] args) {
         SpringApplication.run(DailogApplication.class, args);
     }
 }

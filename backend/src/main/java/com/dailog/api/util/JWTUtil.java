@@ -102,7 +102,7 @@ public class JWTUtil {
     }
 
     //HMAC 알고리즘으로 임의의 비밀키 생성
-    public String createEncodedKey() throws NoSuchAlgorithmException {
+    public static String createEncodedKey() throws NoSuchAlgorithmException {
         KeyGenerator keyGen = KeyGenerator.getInstance("HmacSHA256");
         SecretKey secretKey = keyGen.generateKey();
         return Base64.getEncoder().encodeToString(secretKey.getEncoded());

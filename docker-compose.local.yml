@@ -38,7 +38,7 @@ services:
         limits:
           cpus: '1.5'
           memory: 512M
-#    restart: on-failure
+    restart: on-failure
 
   dailog-frontend:
     build: ./frontend
@@ -51,7 +51,7 @@ services:
         limits:
           cpus: '0.5'
           memory: 64M
-#    restart: on-failure
+    restart: on-failure
 
 volumes:
   db_data:
