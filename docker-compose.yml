@@ -44,8 +44,8 @@ services:
       - 80:80
       - 443:443
     volumes:
-      - ./certbot/conf:/etc/letsencrypt  # SSL 인증서 저장소
-      - ./certbot/www:/var/www/certbot  # 인증서 발급을 위한 웹 루트 경로
+      - ./nginx/certbot/conf:/etc/letsencrypt  # SSL 인증서 저장소
+      - ./nginx/certbot/www:/var/www/certbot  # 인증서 발급을 위한 웹 루트 경로
     depends_on:
       - dailog-backend
     deploy:
@@ -54,14 +54,6 @@ services:
           cpus: '0.5'
           memory: 64M
     restart: on-failure
-
-  certbot:
-    image: certbot/certbot
-    container_name: certbot
-    volumes:
-      - ./certbot/conf:/etc/letsencrypt  # 인증서 저장소
-      - ./certbot/www:/var/www/certbot  # 인증서 발급용 경로
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do sleep 12h & wait $${!}; certbot renew; done;'"
 
 volumes:
   db_data:
