@@ -61,5 +61,6 @@ jobs:
             export JASYPT_ENCRYPTOR_PASSWORD=${{ secrets.JASYPT_ENCRYPTOR_PASSWORD }}
             
             docker-compose down
+            docker-compose run --rm certbot certonly --webroot --webroot-path=/var/www/certbot -d www.dailog.shop
             docker-compose up -d
-            docker-compose run certbot certonly --webroot --webroot-path=/var/www/certbot -d www.dailog.shop
+
