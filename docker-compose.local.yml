@@ -24,6 +24,8 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile-local
+      args:
+        - JASYPT_ENCRYPTOR_PASSWORD=${JASYPT_ENCRYPTOR_PASSWORD}
     environment:
       - DB_URL=dailog-mysql
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-local}
@@ -41,7 +43,9 @@ services:
     restart: on-failure
 
   dailog-frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile-local
     ports:
       - 80:80
     depends_on:
