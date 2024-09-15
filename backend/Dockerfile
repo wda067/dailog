@@ -8,7 +8,7 @@ COPY build.gradle settings.gradle ./
 RUN gradle dependencies --no-daemon
 
 COPY . /app
-RUN gradle clean build --no-daemon -x asciidoctor
+RUN gradle clean build --no-daemon -x asciidoctor -Djasypt.encryptor.password=${JASYPT_ENCRYPTOR_PASSWORD}
 
 FROM openjdk:17-jdk-slim
 
