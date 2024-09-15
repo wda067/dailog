@@ -1,0 +1,27 @@
+spring:
+  datasource:
+    hikari:
+      jdbc-url: jdbc:mysql://${DB_URL:52.79.177.18}:3306/dailog?serverTimezone=Asia/Seoul
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      username: ${MYSQL_USER:myuser}
+      password: ENC(XxtbBVRSshn1VNcE40sVleF/Kf93uqlU)
+
+  security:
+    oauth2:
+      client:
+        registration:
+          naver:
+            redirect-uri: http://www.dailog.shop/login/oauth2/code/naver
+#            redirect-uri: http://52.79.177.18/login/oauth2/code/naver
+          google:
+            redirect-uri: http://www.dailog.shop/login/oauth2/code/google
+          kakao:
+            redirect-uri: http://www.dailog.shop/login/oauth2/code/kakao
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+redirect:
+  url: http://www.dailog.shop/oauth2-jwt-header
+#  url: http://52.79.177.18/oauth2-jwt-header

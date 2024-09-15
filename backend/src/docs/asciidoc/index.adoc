@@ -1,0 +1,87 @@
+= Dailog API
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 2
+:sectlinks:
+
+== 글 단건 조회
+
+=== 요청
+
+include::{snippets}/post-inquiry/http-request.adoc[]
+
+include::{snippets}/post-inquiry/path-parameters.adoc[]
+
+=== 응답
+
+include::{snippets}/post-inquiry/http-response.adoc[]
+
+include::{snippets}/post-inquiry/response-fields.adoc[]
+
+== 글 작성
+
+=== 요청
+
+include::{snippets}/post-create/http-request.adoc[]
+
+include::{snippets}/post-create/request-fields.adoc[]
+
+=== 응답
+
+include::{snippets}/post-create/http-response.adoc[]
+
+== 글 수정
+
+=== 요청
+
+include::{snippets}/post-edit/http-request.adoc[]
+
+include::{snippets}/post-edit/path-parameters.adoc[]
+
+include::{snippets}/post-edit/request-fields.adoc[]
+
+=== 응답
+
+include::{snippets}/post-edit/http-response.adoc[]
+
+== 글 삭제
+
+=== 요청
+
+include::{snippets}/post-delete/http-request.adoc[]
+
+include::{snippets}/post-delete/path-parameters.adoc[]
+
+=== 응답
+
+include::{snippets}/post-delete/http-response.adoc[]
+
+== 글 조회
+
+=== 요청
+
+include::{snippets}/post-get/http-request.adoc[]
+
+include::{snippets}/post-get/path-parameters.adoc[]
+
+=== 응답
+
+include::{snippets}/post-get/http-response.adoc[]
+
+include::{snippets}/post-get/response-fields.adoc[]
+
+== 글 목록 조회
+
+=== 요청
+
+include::{snippets}/post-list/http-request.adoc[]
+
+include::{snippets}/post-list/query-parameters.adoc[]
+
+=== 응답
+
+include::{snippets}/post-list/http-response.adoc[]
+
+include::{snippets}/post-list/response-fields.adoc[]

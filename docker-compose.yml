@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  dailog-mysql:
+    image: ${DOCKERHUB_USERNAME}/dailog-mysql
+    pull_policy: always
+    container_name: mysql-db
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-1234}
+      - MYSQL_DATABASE=dailog
+      - MYSQL_USER=myuser
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-mypassword}
+    ports:
+      - 3306:3306
+    volumes:
+      - db_data:/var/lib/mysql
+#    deploy:
+#      resources:
+#        limits:
+#          cpus: '1'
+#          memory: 256M
+    restart: always
+
+  dailog-backend:
+    image: ${DOCKERHUB_USERNAME}/dailog-backend
+    pull_policy: always
+    environment:
+      - DB_URL=dailog-mysql
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-local}
+      - JASYPT_ENCRYPTOR_PASSWORD=${JASYPT_ENCRYPTOR_PASSWORD}
+    depends_on:
+      - dailog-mysql
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 512M
+#    restart: on-failure
+
+  dailog-frontend:
+    image: ${DOCKERHUB_USERNAME}/dailog-frontend
+    pull_policy: always
+    ports:
+      - 80:80
+    depends_on:
+      - dailog-backend
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 64M
+#    restart: on-failure
+
+volumes:
+  db_data:
