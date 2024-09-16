@@ -91,7 +91,7 @@ public class SecurityConfig {
                     CorsConfiguration configuration = new CorsConfiguration();
                     //허용할 Origin
                     configuration.setAllowedOrigins(Arrays.asList(
-                            "http://www.dailog.shop",
+                            "https://www.dailog.shop",
                             "http://52.79.177.18",
                             "http://localhost"));
                     //모든 HTTP 메서드 허용
