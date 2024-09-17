@@ -31,6 +31,7 @@ public class NaverResponse implements OAuth2Response {
     }
 
     public String getNickname() {
-        return attribute.get("nickname").toString();
+        //return attribute.get("nickname").toString();
+        return "NaverUser_" + getProviderId().substring(0, 4);
     }
 }

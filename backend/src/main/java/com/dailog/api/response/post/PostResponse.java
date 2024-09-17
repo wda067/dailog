@@ -22,6 +22,7 @@ public class PostResponse {
     private final String content;
     private final String createdAt;
     private final String createdBy;
+    private final int commentCount;
 
     public PostResponse(Post post) {
         this.id = post.getId();
@@ -30,6 +31,7 @@ public class PostResponse {
         this.content = post.getContent();
         this.name = post.getMember().getName();
         this.nickname = post.getMember().getNickname();
+        this.commentCount = post.getComments().size();
 
         ZonedDateTime utcCreatedAt = post.getCreatedAt().atZone(ZoneId.of("UTC"));
         ZonedDateTime seoulCreatedAt = utcCreatedAt.withZoneSameInstant(ZoneId.of("Asia/Seoul"));
@@ -40,13 +42,14 @@ public class PostResponse {
 
     @Builder
     public PostResponse(Long id, Long memberId, String name, String nickname, String title, String content,
-                        LocalDateTime createdAt, String createdBy) {
+                        LocalDateTime createdAt, String createdBy, int commentCount) {
         this.id = id;
         this.memberId = memberId;
         this.name = name;
         this.nickname = nickname;
         this.title = title.substring(0, Math.min(title.length(), 60));
         this.content = content;
+        this.commentCount = commentCount;
 
         ZonedDateTime utcCreatedAt = createdAt.atZone(ZoneId.of("UTC"));
         ZonedDateTime seoulCreatedAt = utcCreatedAt.withZoneSameInstant(ZoneId.of("Asia/Seoul"));
