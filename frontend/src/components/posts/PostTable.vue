@@ -1,35 +1,37 @@
 <template>
   <table class="table">
     <thead>
-      <tr>
-        <th class="text-center col-id" scope="col">번호</th>
-        <th class="text-center col-title" scope="col">제목</th>
-        <th class="text-center col-author" scope="col">글쓴이</th>
-        <th class="text-center col-date" scope="col">작성일</th>
-<!--        <th class="text-center col-date" scope="col">조회</th>-->
-<!--        <th class="text-center col-date" scope="col">추천</th>-->
-      </tr>
+    <tr>
+      <th class="text-center col-id" scope="col">번호</th>
+      <th class="text-center col-title" scope="col">제목</th>
+      <th class="text-center col-author" scope="col">글쓴이</th>
+      <th class="text-center col-date" scope="col">작성일</th>
+      <!--        <th class="text-center col-date" scope="col">조회</th>-->
+      <!--        <th class="text-center col-date" scope="col">추천</th>-->
+    </tr>
     </thead>
     <tbody>
-      <tr v-for="item in items" :key="item.id">
-        <th class="text-center" scope="row">{{ item.id }}</th>
-        <td class="text-left">
-          <a
+    <tr v-for="item in items" :key="item.id">
+      <th class="text-center" scope="row">{{ item.id }}</th>
+      <td class="text-left">
+        <a
             class="post-title-link"
             href="#"
             @click.prevent="postClick(item.id)"
-            >{{ truncateTitle(item.title) }}</a
-          >
-        </td>
-        <td class="text-center">{{ item.nickname }}</td>
-        <td class="text-center">{{ formatDate(item.createdAt) }}</td>
-      </tr>
+        >
+          <span class="title-text">{{ truncateTitle(item.title) }}</span>
+          <span class="comment-count"> [{{ item.commentCount }}]</span>
+        </a>
+      </td>
+      <td class="text-center">{{ item.nickname }}</td>
+      <td class="text-center">{{ formatDate(item.createdAt) }}</td>
+    </tr>
     </tbody>
   </table>
 </template>
 
 <script lang="ts" setup>
-import { format, isSameDay } from 'date-fns';
+import {format, isSameDay} from 'date-fns';
 
 defineProps({
   items: {
@@ -38,6 +40,7 @@ defineProps({
       title: string;
       createdAt: string;
       nickname: string;
+      commentCount: number;
     }>,
     required: true,
   },
@@ -101,9 +104,17 @@ td {
   transition: color 0.3s ease;
 }
 
-.post-title-link:hover,
-.post-title-link:focus {
+.post-title-link:hover {
   color: #1a1d20;
+}
+
+.post-title-link:hover .title-text {
   text-decoration: underline;
+}
+
+.comment-count {
+  color: #FF0000;
+  font-weight: bold;
+  text-decoration: none;
 }
 </style>

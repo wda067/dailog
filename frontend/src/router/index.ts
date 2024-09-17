@@ -4,14 +4,15 @@ import PostWriteView from '@/views/posts/PostWriteView.vue';
 import PostDetailView from '@/views/posts/PostDetailView.vue';
 import PostEditView from '@/views/posts/PostEditView.vue';
 import PostListView from '@/views/posts/PostListView.vue';
-import LoginView from '@/views/LoginView.vue';
-import JoinView from '@/views/JoinView.vue';
+import LoginView from '@/views/auth/LoginView.vue';
+import JoinView from '@/views/auth/JoinView.vue';
 import { useAlert } from '@/composables/useAlert';
 import AdminMemberListView from '@/views/admins/AdminMemberListView.vue';
 import MemberDetailView from '@/views/members/MemberDetailView.vue';
 import AdminMemberDetailView from '@/views/admins/AdminMemberDetailView.vue';
-import OAuth2Redirect from '@/views/OAuth2Redirect.vue';
+import OAuth2Redirect from '@/views/auth/OAuth2Redirect.vue';
 import { useAuthStore } from '@/stores/auth';
+import NotFoundView from "@/views/errors/NotFoundView.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -79,6 +80,11 @@ const router = createRouter({
       path: '/oauth2-jwt-header',
       name: 'OAuth2Redirect',
       component: OAuth2Redirect,
+    },
+    {
+      path: '/:catchAll(.*)',  //Vue Router 4에서는 이와 같은 패턴을 사용
+      name: 'NotFound',
+      component: NotFoundView,
     },
   ],
 });
