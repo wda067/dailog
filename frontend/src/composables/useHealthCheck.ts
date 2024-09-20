@@ -1,11 +1,13 @@
 import axios from 'axios';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import {useAuthStore} from "@/stores/auth";
 
 export function useHealthCheck() {
   const isServerAlive = ref(true);
   const wasServerDown = ref(false);
   const router = useRouter();
+  const authStore = useAuthStore();
 
   //서버 상태를 확인하는 함수
   async function checkServerStatus() {
@@ -20,12 +22,13 @@ export function useHealthCheck() {
       if (wasServerDown.value) {
         wasServerDown.value = false;
         window.location.reload();
-        router.replace({ name: 'HomeView' });
+        await router.replace({name: 'HomeView'});
       }
     } catch (error) {
       console.error('Server connection failed:', error);
       isServerAlive.value = false;
       wasServerDown.value = true;
+      authStore.cleanToken();
     }
   }
 
@@ -42,7 +45,6 @@ export function useHealthCheck() {
 
   return {
     isServerAlive,
-    checkServerStatus,
     startServerMonitor,
   };
 }
