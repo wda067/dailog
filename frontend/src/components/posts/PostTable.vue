@@ -20,7 +20,7 @@
             @click.prevent="postClick(item.id)"
         >
           <span class="title-text">{{ truncateTitle(item.title) }}</span>
-          <span class="comment-count"> [{{ item.commentCount }}]</span>
+          <span v-if="item.commentCount > 0" class="comment-count"> [{{ item.commentCount }}]</span>
         </a>
       </td>
       <td class="text-center">{{ item.nickname }}</td>
