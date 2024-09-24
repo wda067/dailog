@@ -8,7 +8,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.dailog.api.domain.enums.Role;
 import com.dailog.api.request.oAuth2.CustomOAuth2User;
-import com.dailog.api.service.ReissueService;
+import com.dailog.api.service.RefreshTokenService;
 import com.dailog.api.util.CookieUtil;
 import com.dailog.api.util.JWTUtil;
 import jakarta.servlet.ServletException;
@@ -29,7 +29,7 @@ import org.springframework.stereotype.Component;
 public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final JWTUtil jwtUtil;
-    private final ReissueService reissueService;
+    private final RefreshTokenService refreshTokenService;
 
     @Value("${redirect.url}")
     private String redirectUrl;
@@ -55,7 +55,7 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
         String refresh = jwtUtil.createJwt("refresh", username, roleString,
                 REFRESH_TOKEN_EXPIRATION_TIME_MS.getValue(), true, provider);
 
-        reissueService.saveRefreshToken(username, REFRESH_TOKEN_EXPIRATION_TIME_S.getValue(), refresh);
+        refreshTokenService.save(username, refresh, REFRESH_TOKEN_EXPIRATION_TIME_S.getValue());
 
         response.addCookie(CookieUtil.createCookie("access", access, ACCESS_TOKEN_EXPIRATION_TIME_S.getValue()));
         response.addCookie(CookieUtil.createCookie("refresh", refresh, REFRESH_TOKEN_EXPIRATION_TIME_S.getValue()));

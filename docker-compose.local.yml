@@ -10,7 +10,7 @@ services:
       - MYSQL_USER=myuser
       - MYSQL_PASSWORD=${MYSQL_PASSWORD:-mypassword}
     ports:
-      - 3306:3306
+      - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
 #    deploy:
@@ -19,6 +19,11 @@ services:
 #          cpus: '1'
 #          memory: 256M
     restart: always
+    
+  cache-server:
+    image: redis
+    ports:
+      - "6379:6379"
 
   dailog-backend:
     build:
@@ -30,11 +35,13 @@ services:
       - DB_URL=dailog-mysql
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-local}
       - JASYPT_ENCRYPTOR_PASSWORD=${JASYPT_ENCRYPTOR_PASSWORD}
+      - REDIS_HOST=cache-server
     ports:
-      - 8080:8080
-      - 5005:5005
+      - "8080:8080"
+      - "5005:5005"
     depends_on:
       - dailog-mysql
+      - cache-server
     deploy:
       resources:
         limits:
@@ -47,7 +54,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile-local
     ports:
-      - 80:80
+      - "80:80"
     depends_on:
       - dailog-backend
     deploy:

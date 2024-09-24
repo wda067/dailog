@@ -6,7 +6,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.dailog.api.repository.RefreshRepository;
+import com.dailog.api.repository.RefreshTokenRepository;
 import com.dailog.api.util.JWTUtil;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.Cookie;
@@ -27,7 +27,7 @@ class ReissueServiceTest {
     private JWTUtil jwtUtil;
 
     @Mock
-    private RefreshRepository refreshRepository;
+    private RefreshTokenRepository refreshTokenRepository;
 
     @Mock
     private HttpServletRequest request;
@@ -114,7 +114,7 @@ class ReissueServiceTest {
         Cookie refreshCookie = new Cookie("refresh", validToken);
         when(request.getCookies()).thenReturn(new Cookie[]{refreshCookie});
         when(jwtUtil.getCategory(validToken)).thenReturn("refresh");
-        when(refreshRepository.existsByRefreshToken(validToken)).thenReturn(false);
+        when(refreshTokenRepository.existsByRefreshToken(validToken)).thenReturn(false);
 
         //when
         ResponseEntity<?> result = reissueService.response(request, response);
@@ -137,7 +137,7 @@ class ReissueServiceTest {
 
         when(request.getCookies()).thenReturn(new Cookie[]{refreshCookie});
         when(jwtUtil.getCategory(refreshToken)).thenReturn("refresh");
-        when(refreshRepository.existsByRefreshToken(refreshToken)).thenReturn(true);
+        when(refreshTokenRepository.existsByRefreshToken(refreshToken)).thenReturn(true);
         when(jwtUtil.getUsername(refreshToken)).thenReturn(username);
         when(jwtUtil.getRole(refreshToken)).thenReturn(role);
         when(jwtUtil.createJwt("access", username, role, 60 * 10 * 1000L, false, null)).thenReturn(newAccessToken);

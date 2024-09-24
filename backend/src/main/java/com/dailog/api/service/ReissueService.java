@@ -5,23 +5,14 @@ import static com.dailog.api.constants.TokenExpirationTimeMs.ACCESS_TOKEN_EXPIRA
 import static com.dailog.api.constants.TokenExpirationTimeMs.REFRESH_TOKEN_EXPIRATION_TIME_MS;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
-import com.dailog.api.domain.RefreshToken;
-import com.dailog.api.domain.enums.Role;
-import com.dailog.api.exception.auth.Unauthorized;
 import com.dailog.api.util.CookieUtil;
 import com.dailog.api.util.JWTUtil;
-import com.dailog.api.repository.RefreshRepository;
-import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.Jwts;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.Optional;
-import javax.crypto.SecretKey;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ReissueService {
 
     private final JWTUtil jwtUtil;
-    private final RefreshRepository refreshRepository;
+    private final RefreshTokenService refreshTokenService;
 
     @Transactional
     public ResponseEntity<?> response(HttpServletRequest request, HttpServletResponse response) {
@@ -67,14 +58,19 @@ public class ReissueService {
             return ResponseEntity.status(BAD_REQUEST).body("Invalid refresh token");
         }
 
+        String username = jwtUtil.getUsername(refreshToken);
+        if (username == null) {
+            return ResponseEntity.status(BAD_REQUEST).body("Invalid refresh token");
+        }
+
         //DB에 존재하지 않는 (혹은 블랙리스트 처리된) refresh 토큰
-        boolean isRefreshTokenNotFound = !refreshRepository.existsByRefreshToken(refreshToken);
+        boolean isRefreshTokenNotFound = refreshTokenService.getTokenByUsername(username)
+                .isEmpty();
         if (isRefreshTokenNotFound) {
             return ResponseEntity.status(BAD_REQUEST).body("Invalid refresh token");
         }
 
         //토큰 재발급
-        String username = jwtUtil.getUsername(refreshToken);
         String roleString = jwtUtil.getRole(refreshToken);
         Boolean oAuth2Login = jwtUtil.isOAuth2Login(refreshToken);
         String provider = jwtUtil.getProvider(refreshToken);
@@ -85,23 +81,12 @@ public class ReissueService {
                 REFRESH_TOKEN_EXPIRATION_TIME_MS.getValue(), oAuth2Login, provider);
 
         //기존 refresh DB 삭제, 새로운 refresh 저장
-        refreshRepository.deleteByRefreshToken(refreshToken);
-        saveRefreshToken(username, REFRESH_TOKEN_EXPIRATION_TIME_S.getValue(), newRefresh);
+        refreshTokenService.delete(username);
+        refreshTokenService.save(username, newRefresh, REFRESH_TOKEN_EXPIRATION_TIME_S.getValue());
 
         response.setHeader("access", newAccess);
         response.addCookie(CookieUtil.createCookie("refresh", newRefresh, REFRESH_TOKEN_EXPIRATION_TIME_S.getValue()));
 
         return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    @Transactional
-    public void saveRefreshToken(String username, Integer expiredS, String refresh) {
-        RefreshToken refreshToken = RefreshToken.builder()
-                .username(username)
-                .refreshToken(refresh)
-                .expiration(new Date(System.currentTimeMillis() + expiredS).toString())
-                .build();
-
-        refreshRepository.save(refreshToken);
     }
 }

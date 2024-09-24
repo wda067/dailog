@@ -6,6 +6,7 @@ import static com.dailog.api.constants.TokenExpirationTimeS.REFRESH_TOKEN_EXPIRA
 import static jakarta.servlet.http.HttpServletResponse.SC_OK;
 
 import com.dailog.api.domain.enums.Role;
+import com.dailog.api.service.RefreshTokenService;
 import com.dailog.api.service.ReissueService;
 import com.dailog.api.util.CookieUtil;
 import com.dailog.api.util.JWTUtil;
@@ -25,7 +26,7 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 public class LoginSuccessHandler implements AuthenticationSuccessHandler {
 
     private final JWTUtil jwtUtil;
-    private final ReissueService reissueService;
+    private final RefreshTokenService refreshTokenService;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -44,7 +45,7 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
                 REFRESH_TOKEN_EXPIRATION_TIME_MS.getValue(), false, null);
         response.addCookie(CookieUtil.createCookie("refresh", refresh, REFRESH_TOKEN_EXPIRATION_TIME_S.getValue()));
 
-        reissueService.saveRefreshToken(username, REFRESH_TOKEN_EXPIRATION_TIME_S.getValue(), refresh);
+        refreshTokenService.save(username, refresh, REFRESH_TOKEN_EXPIRATION_TIME_S.getValue());
 
         response.setStatus(SC_OK);
     }
