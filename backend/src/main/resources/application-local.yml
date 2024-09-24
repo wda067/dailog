@@ -18,9 +18,19 @@ spring:
           kakao:
             redirect-uri: http://localhost/login/oauth2/code/kakao
 
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: 6379
+
   jpa:
     hibernate:
       ddl-auto: create
 
 redirect:
   url: http://localhost/oauth2-jwt-header
+
+#Redis 사용에 대한 로그가 조회되도록 설정
+logging:
+  level:
+    org.springframework.cache: trace

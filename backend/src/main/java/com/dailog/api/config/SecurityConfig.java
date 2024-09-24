@@ -12,9 +12,9 @@ import com.dailog.api.config.handler.LoginFailHandler;
 import com.dailog.api.config.handler.LoginSuccessHandler;
 import com.dailog.api.config.handler.OAuthLoginFailHandler;
 import com.dailog.api.domain.Member;
-import com.dailog.api.repository.RefreshRepository;
+import com.dailog.api.repository.RefreshTokenRepository;
 import com.dailog.api.repository.member.MemberRepository;
-import com.dailog.api.service.ReissueService;
+import com.dailog.api.service.RefreshTokenService;
 import com.dailog.api.service.oAuth2.CustomOAuth2UserService;
 import com.dailog.api.util.JWTUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -54,7 +54,7 @@ public class SecurityConfig {
     private final CustomOAuth2UserService customOAuth2UserService;
     private final CustomOAuth2SuccessHandler customOAuth2SuccessHandler;
     private final JWTUtil jwtUtil;
-    private final ReissueService reissueService;
+    private final RefreshTokenService refreshTokenService;
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
@@ -66,7 +66,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, RefreshRepository refreshRepository)
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, RefreshTokenRepository refreshTokenRepository)
             throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
@@ -110,7 +110,7 @@ public class SecurityConfig {
 
                 .addFilterAt(jsonEmailPasswordAuthFilter(), UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(new JWTFilter(jwtUtil), JsonEmailPasswordAuthFilter.class)
-                .addFilterBefore(new CustomLogoutFilter(jwtUtil, refreshRepository), LogoutFilter.class)
+                .addFilterBefore(new CustomLogoutFilter(jwtUtil, refreshTokenService), LogoutFilter.class)
 
                 .exceptionHandling(e -> {
                     e.accessDeniedHandler(new Http403Handler(objectMapper));
@@ -134,7 +134,7 @@ public class SecurityConfig {
     public JsonEmailPasswordAuthFilter jsonEmailPasswordAuthFilter() {
         JsonEmailPasswordAuthFilter filter = new JsonEmailPasswordAuthFilter("/api/auth/login", objectMapper);
         filter.setAuthenticationManager(authenticationManager());
-        filter.setAuthenticationSuccessHandler(new LoginSuccessHandler(jwtUtil, reissueService));
+        filter.setAuthenticationSuccessHandler(new LoginSuccessHandler(jwtUtil, refreshTokenService));
         filter.setAuthenticationFailureHandler(new LoginFailHandler(objectMapper));
         filter.setSecurityContextRepository(new NullSecurityContextRepository());
         return filter;

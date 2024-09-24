@@ -83,7 +83,7 @@ public class MemberService {
 
         memberRepository.save(member);
     }
-
+    //todo 회원 탈퇴 시 Refresh 토큰 삭제
     public void leave(Long memberId, Leave leave, String email) {
         Member member = getMember(memberId, email);
 

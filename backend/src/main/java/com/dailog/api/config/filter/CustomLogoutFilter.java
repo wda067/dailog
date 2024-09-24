@@ -1,9 +1,9 @@
 package com.dailog.api.config.filter;
 
 
+import com.dailog.api.service.RefreshTokenService;
 import com.dailog.api.util.CookieUtil;
 import com.dailog.api.util.JWTUtil;
-import com.dailog.api.repository.RefreshRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
@@ -15,13 +15,16 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.filter.GenericFilterBean;
 
 @RequiredArgsConstructor
+@Slf4j
 public class CustomLogoutFilter extends GenericFilterBean {
 
     private final JWTUtil jwtUtil;
-    private final RefreshRepository refreshRepository;
+    private final RefreshTokenService refreshTokenService;
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain)
@@ -30,7 +33,7 @@ public class CustomLogoutFilter extends GenericFilterBean {
     }
 
     private void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-        throws IOException, ServletException {
+            throws IOException, ServletException {
         String requestURI = request.getRequestURI();
         String requestMethod = request.getMethod();
 
@@ -50,17 +53,28 @@ public class CustomLogoutFilter extends GenericFilterBean {
         }
 
         String refresh = refreshToken.get().getValue();
+        String username = jwtUtil.getUsername(refresh);
         String category = jwtUtil.getCategory(refresh);
 
-        boolean isNotExist = !refreshRepository.existsByRefreshToken(refresh);
         boolean isNotRefreshToken = !category.equals("refresh");
-        if(isNotExist || isNotRefreshToken){
+        if (isNotRefreshToken) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+
+        if (username == null) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        }
+
+        boolean isRefreshTokenNotFound = refreshTokenService.getTokenByUsername(username)
+                .isEmpty();
+        if (isRefreshTokenNotFound) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
 
         //DB에서 Refresh 토큰 삭제
-        refreshRepository.deleteByRefreshToken(refresh);
+        refreshTokenService.delete(username);
         //Refresh 토큰의 생명 주기를 0으로 하여 응답
         response.addCookie(CookieUtil.createCookie("refresh", null, 0));
         response.setStatus(HttpServletResponse.SC_OK);
