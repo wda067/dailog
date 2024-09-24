@@ -18,11 +18,6 @@ spring:
           kakao:
             redirect-uri: http://localhost/login/oauth2/code/kakao
 
-  data:
-    redis:
-      host: ${REDIS_HOST}
-      port: 6379
-
   jpa:
     hibernate:
       ddl-auto: create

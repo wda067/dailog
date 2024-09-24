@@ -8,6 +8,10 @@ spring:
         one-indexed-parameters: true  #페이지가 1부터 시작
         default-page-size: 5
 
+    redis:
+      host: ${REDIS_HOST}
+      port: 6379
+
   web:
     resources:
       static-locations: classpath:/static/
