@@ -29,12 +29,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class CommentController {
 
     private final CommentService commentService;
-    //private final CommentCreateValidator validator;
-
-    //@InitBinder("commentCreate")
-    //public void initBinder(WebDataBinder binder) {
-    //    binder.addValidators(validator);
-    //}
 
     @GetMapping("/api/posts/{postId}/comments")
     public List<CommentResponse> get(@PathVariable Long postId) {

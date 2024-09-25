@@ -88,8 +88,8 @@ dependencies {
 test {
 	outputs.dir snippetsDir
 	useJUnitPlatform()
-//	systemProperty "jasypt.encryptor.password", findProperty("jasypt.encryptor.password")
 	systemProperty "jasypt.encryptor.password", System.getProperty("jasypt.encryptor.password")
+	systemProperty 'REDIS_HOST', System.getenv('REDIS_HOST') ?: 'localhost'
 }
 
 asciidoctor {
