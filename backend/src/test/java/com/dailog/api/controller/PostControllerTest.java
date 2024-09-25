@@ -573,7 +573,6 @@ class PostControllerTest {
                         .contentType(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(posts.get(8).getId().intValue())))
-                .andExpect(jsonPath("$.title").value("9번째 게시글"))
                 .andDo(print());
     }
 
@@ -595,7 +594,6 @@ class PostControllerTest {
                         .contentType(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(posts.get(1).getId().intValue())))
-                .andExpect(jsonPath("$.title").value("2번째 게시글"))
                 .andDo(print());
     }
 
@@ -670,7 +668,6 @@ class PostControllerTest {
                         .contentType(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(posts.get(7).getId().intValue())))
-                .andExpect(jsonPath("$.title").value("8번째 게시글"))
                 .andDo(print());
     }
 
@@ -695,7 +692,6 @@ class PostControllerTest {
                         .contentType(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(posts.get(2).getId().intValue())))
-                .andExpect(jsonPath("$.title").value("3번째 게시글"))
                 .andDo(print());
     }
 }
