@@ -19,9 +19,9 @@ services:
 #          cpus: '1'
 #          memory: 256M
     restart: always
-    
+
   cache-server:
-    image: redis
+    image: redis:alpine
     ports:
       - "6379:6379"
 
@@ -32,16 +32,16 @@ services:
       args:
         - JASYPT_ENCRYPTOR_PASSWORD=${JASYPT_ENCRYPTOR_PASSWORD}
     environment:
+      - JASYPT_ENCRYPTOR_PASSWORD=${JASYPT_ENCRYPTOR_PASSWORD}
       - DB_URL=dailog-mysql
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-local}
-      - JASYPT_ENCRYPTOR_PASSWORD=${JASYPT_ENCRYPTOR_PASSWORD}
       - REDIS_HOST=cache-server
     ports:
       - "8080:8080"
       - "5005:5005"
     depends_on:
-      - dailog-mysql
       - cache-server
+      - dailog-mysql
     deploy:
       resources:
         limits:
