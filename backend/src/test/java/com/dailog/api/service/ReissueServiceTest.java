@@ -1,17 +1,23 @@
 package com.dailog.api.service;
 
+import static com.dailog.api.constants.TokenExpirationTimeMs.ACCESS_TOKEN_EXPIRATION_TIME_MS;
+import static com.dailog.api.constants.TokenExpirationTimeMs.REFRESH_TOKEN_EXPIRATION_TIME_MS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.dailog.api.domain.RefreshToken;
 import com.dailog.api.repository.RefreshTokenRepository;
 import com.dailog.api.util.JWTUtil;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,6 +31,9 @@ class ReissueServiceTest {
 
     @Mock
     private JWTUtil jwtUtil;
+
+    @Mock
+    private RefreshTokenService refreshTokenService;
 
     @Mock
     private RefreshTokenRepository refreshTokenRepository;
@@ -41,6 +50,50 @@ class ReissueServiceTest {
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
+        refreshTokenRepository.deleteAll();
+    }
+
+    @Test
+    @DisplayName("쿠키에 refresh token이 존재할 경우 access token과 함께 재발급하여 응답한다.")
+    public void testResponse_Success() {
+        // Given
+        Cookie cookie = new Cookie("refresh", "validRefreshToken");
+        when(request.getCookies()).thenReturn(new Cookie[]{cookie});
+
+        // Ensure all methods return expected values
+        when(jwtUtil.isExpired(anyString())).thenReturn(false);
+        when(jwtUtil.getCategory(anyString())).thenReturn("refresh");
+        when(jwtUtil.getUsername(anyString())).thenReturn("testUser");
+        when(jwtUtil.getRole(anyString())).thenReturn("userRole");
+        when(jwtUtil.isOAuth2Login(anyString())).thenReturn(false);
+        when(jwtUtil.getProvider(anyString())).thenReturn("provider");
+
+        RefreshToken refreshToken = RefreshToken.builder()
+                .username("testUser")
+                .refreshToken("validRefreshToken")
+                .expiration(REFRESH_TOKEN_EXPIRATION_TIME_MS.getValue())
+                .build();
+
+        when(refreshTokenService.getTokenByUsername(anyString())).thenReturn(Optional.of(refreshToken));
+
+        //Use eq() to wrap raw string values to match them with argument matchers
+        when(jwtUtil.createJwt(eq("access"), eq("testUser"), eq("userRole"),
+                eq(ACCESS_TOKEN_EXPIRATION_TIME_MS.getValue()), eq(false), eq("provider")))
+                .thenReturn("newAccessToken");
+
+        when(jwtUtil.createJwt(eq("refresh"), eq("testUser"), eq("userRole"),
+                eq(REFRESH_TOKEN_EXPIRATION_TIME_MS.getValue()), eq(false), eq("provider")))
+                .thenReturn("newRefreshToken");
+
+        //when
+        ResponseEntity<?> result = reissueService.response(request, response);
+
+        //then
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+
+        // Verify that setHeader is called with the correct token
+        verify(response).setHeader("access", "newAccessToken");
+        verify(response).addCookie(any(Cookie.class));
     }
 
     @Test
@@ -62,7 +115,7 @@ class ReissueServiceTest {
     void should_ReturnBadRequest_When_RefreshTokenIsEmpty() {
         //given
         Cookie cookie = new Cookie("notRefresh", "");
-        when(request.getCookies()).thenReturn(new Cookie[] {cookie});
+        when(request.getCookies()).thenReturn(new Cookie[]{cookie});
 
         //when
         ResponseEntity<?> result = reissueService.response(request, response);
@@ -114,7 +167,7 @@ class ReissueServiceTest {
         Cookie refreshCookie = new Cookie("refresh", validToken);
         when(request.getCookies()).thenReturn(new Cookie[]{refreshCookie});
         when(jwtUtil.getCategory(validToken)).thenReturn("refresh");
-        when(refreshTokenRepository.existsByRefreshToken(validToken)).thenReturn(false);
+        when(refreshTokenService.getTokenByUsername(jwtUtil.getUsername(validToken))).thenReturn(Optional.empty());
 
         //when
         ResponseEntity<?> result = reissueService.response(request, response);
@@ -122,33 +175,5 @@ class ReissueServiceTest {
         //then
         assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
         assertEquals("Invalid refresh token", result.getBody());
-    }
-
-    @Test
-    @DisplayName("쿠키에 refresh token이 존재할 경우 access token과 함께 재발급하여 응답한다.")
-    public void testResponse_Success() {
-        //given
-        String refreshToken = "validToken";
-        String newAccessToken = "newAccessToken";
-        String newRefreshToken = "newRefreshToken";
-        String username = "testUser";
-        String role = "ROLE_MEMBER";
-        Cookie refreshCookie = new Cookie("refresh", refreshToken);
-
-        when(request.getCookies()).thenReturn(new Cookie[]{refreshCookie});
-        when(jwtUtil.getCategory(refreshToken)).thenReturn("refresh");
-        when(refreshTokenRepository.existsByRefreshToken(refreshToken)).thenReturn(true);
-        when(jwtUtil.getUsername(refreshToken)).thenReturn(username);
-        when(jwtUtil.getRole(refreshToken)).thenReturn(role);
-        when(jwtUtil.createJwt("access", username, role, 60 * 10 * 1000L, false, null)).thenReturn(newAccessToken);
-        when(jwtUtil.createJwt("refresh", username, role, 60 * 60 * 24 * 1000L, false, null)).thenReturn(newRefreshToken);
-
-        //when
-        ResponseEntity<?> result = reissueService.response(request, response);
-
-        //then
-        assertEquals(HttpStatus.OK, result.getStatusCode());
-        verify(response).setHeader("access", newAccessToken);
-        verify(response).addCookie(any(Cookie.class));
     }
 }
