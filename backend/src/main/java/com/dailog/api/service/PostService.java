@@ -14,6 +14,7 @@ import com.dailog.api.request.post.PostEdit;
 import com.dailog.api.request.post.PostPageRequest;
 import com.dailog.api.request.post.PostSearch;
 import com.dailog.api.response.PagingResponse;
+import com.dailog.api.response.post.PostIdResponse;
 import com.dailog.api.response.post.PostResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,6 +48,8 @@ public class PostService {
         Post post = postRepository.findById(id)
                 .orElseThrow(PostNotFound::new);
 
+        post.updateViews();
+
         return PostResponse.builder()
                 .id(post.getId())
                 .memberId(post.getMemberId())
@@ -72,30 +75,46 @@ public class PostService {
         return new PagingResponse<>(postPage, PostResponse.class);
     }
 
-    public PostResponse getPrevPost(long id) {
-        Post prevPost = postRepository.findPrevPost(id)
-                .orElseThrow(PostNotFound::new);
+    //public PostResponse getPrevPost(long id) {
+    //    Post prevPost = postRepository.findPrevPost(id)
+    //            .orElseThrow(PostNotFound::new);
+    //
+    //    return PostResponse.builder()
+    //            .id(prevPost.getId())
+    //            .title(prevPost.getTitle())
+    //            .content(prevPost.getContent())
+    //            .createdAt(prevPost.getCreatedAt())
+    //            .createdBy(prevPost.getCreatedBy())
+    //            .build();
+    //}
+    //
+    //public PostResponse getNextPost(long id) {
+    //    Post prevPost = postRepository.findNextPost(id)
+    //            .orElseThrow(PostNotFound::new);
+    //
+    //    return PostResponse.builder()
+    //            .id(prevPost.getId())
+    //            .title(prevPost.getTitle())
+    //            .content(prevPost.getContent())
+    //            .createdAt(prevPost.getCreatedAt())
+    //            .createdBy(prevPost.getCreatedBy())
+    //            .build();
+    //}
 
-        return PostResponse.builder()
-                .id(prevPost.getId())
-                .title(prevPost.getTitle())
-                .content(prevPost.getContent())
-                .createdAt(prevPost.getCreatedAt())
-                .createdBy(prevPost.getCreatedBy())
-                .build();
+    public PostIdResponse getPrevPostId(Long postId) {
+        Long prevPostId = postRepository.findPrevPostId(postId);
+        if (prevPostId == null) {
+            throw new PostNotFound();
+        }
+        return new PostIdResponse(prevPostId);
     }
 
-    public PostResponse getNextPost(long id) {
-        Post prevPost = postRepository.findNextPost(id)
-                .orElseThrow(PostNotFound::new);
-
-        return PostResponse.builder()
-                .id(prevPost.getId())
-                .title(prevPost.getTitle())
-                .content(prevPost.getContent())
-                .createdAt(prevPost.getCreatedAt())
-                .createdBy(prevPost.getCreatedBy())
-                .build();
+    public PostIdResponse getNextPostId(Long postId) {
+        Long nextPostId = postRepository.findNextPostId(postId);
+        if (nextPostId == null) {
+            throw new PostNotFound();
+        }
+        return new PostIdResponse(nextPostId);
     }
 
     @Transactional

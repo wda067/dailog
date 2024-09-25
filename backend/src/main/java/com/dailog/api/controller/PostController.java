@@ -8,6 +8,7 @@ import com.dailog.api.request.post.PostEdit;
 import com.dailog.api.request.post.PostPageRequest;
 import com.dailog.api.request.post.PostSearch;
 import com.dailog.api.response.PagingResponse;
+import com.dailog.api.response.post.PostIdResponse;
 import com.dailog.api.response.post.PostResponse;
 import com.dailog.api.service.PostService;
 import com.dailog.api.util.JWTUtil;
@@ -96,15 +97,27 @@ public class PostController {
         return postService.get(postId);
     }
 
+    //@GetMapping("/api/posts/{postId}/prev")
+    //public PostResponse getPrevPost(@PathVariable Long postId) {
+    //    return postService.getPrevPost(postId);
+    //}
+    //
+    //@GetMapping("/api/posts/{postId}/next")
+    //public PostResponse getNextPost(@PathVariable Long postId) {
+    //    return postService.getNextPost(postId);
+    //}
+
     @GetMapping("/api/posts/{postId}/prev")
-    public PostResponse getPrevPost(@PathVariable Long postId) {
-        return postService.getPrevPost(postId);
+    public PostIdResponse getPrevPostId(@PathVariable Long postId) {
+        return postService.getPrevPostId(postId);
     }
 
     @GetMapping("/api/posts/{postId}/next")
-    public PostResponse getNextPost(@PathVariable Long postId) {
-        return postService.getNextPost(postId);
+    public PostIdResponse getNextPostId(@PathVariable Long postId) {
+        return postService.getNextPostId(postId);
     }
+
+
 
     @GetMapping("/api/posts")
     public PagingResponse<PostResponse> getList(PostPageRequest postPageRequest) {

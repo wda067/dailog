@@ -81,6 +81,26 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom {
         return Optional.ofNullable(post);
     }
 
+    @Override
+    public Long findPrevPostId(Long id) {
+
+        return queryFactory.select(post.id)
+                .from(post)
+                .where(post.id.lt(id))
+                .orderBy(post.id.desc())
+                .fetchFirst();
+    }
+
+    @Override
+    public Long findNextPostId(Long id) {
+
+        return queryFactory.select(post.id)
+                .from(post)
+                .where(post.id.gt(id))
+                .orderBy(post.id.asc())
+                .fetchFirst();
+    }
+
     private BooleanExpression regDtsAfter(String searchDateType) {
         LocalDateTime dateTime = LocalDateTime.now();
 

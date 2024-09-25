@@ -16,4 +16,8 @@ public interface PostRepositoryCustom {
     Optional<Post> findPrevPost(Long id);
 
     Optional<Post> findNextPost(Long id);
+
+    Long findPrevPostId(Long id);
+
+    Long findNextPostId(Long id);
 }
