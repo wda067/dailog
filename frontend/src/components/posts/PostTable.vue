@@ -1,37 +1,40 @@
 <template>
   <table class="table">
     <thead>
-    <tr>
-      <th class="text-center col-id" scope="col">번호</th>
-      <th class="text-center col-title" scope="col">제목</th>
-      <th class="text-center col-author" scope="col">글쓴이</th>
-      <th class="text-center col-date" scope="col">작성일</th>
-      <!--        <th class="text-center col-date" scope="col">조회</th>-->
-      <!--        <th class="text-center col-date" scope="col">추천</th>-->
-    </tr>
+      <tr>
+        <th class="text-center col-id" scope="col">번호</th>
+        <th class="text-center col-title" scope="col">제목</th>
+        <th class="text-center col-author" scope="col">글쓴이</th>
+        <th class="text-center col-date" scope="col">작성일</th>
+        <th class="text-center col-date" scope="col">조회</th>
+        <!--        <th class="text-center col-date" scope="col">추천</th>-->
+      </tr>
     </thead>
     <tbody>
-    <tr v-for="item in items" :key="item.id">
-      <th class="text-center" scope="row">{{ item.id }}</th>
-      <td class="text-left">
-        <a
+      <tr v-for="item in items" :key="item.id">
+        <th class="text-center" scope="row">{{ item.id }}</th>
+        <td class="text-left">
+          <a
             class="post-title-link"
             href="#"
             @click.prevent="postClick(item.id)"
-        >
-          <span class="title-text">{{ truncateTitle(item.title) }}</span>
-          <span v-if="item.commentCount > 0" class="comment-count"> [{{ item.commentCount }}]</span>
-        </a>
-      </td>
-      <td class="text-center">{{ item.nickname }}</td>
-      <td class="text-center">{{ formatDate(item.createdAt) }}</td>
-    </tr>
+          >
+            <span class="title-text">{{ truncateTitle(item.title) }}</span>
+            <span v-if="item.commentCount > 0" class="comment-count">
+              [{{ item.commentCount }}]</span
+            >
+          </a>
+        </td>
+        <td class="text-center">{{ item.nickname }}</td>
+        <td class="text-center">{{ formatDate(item.createdAt) }}</td>
+        <td class="text-center">{{ item.views }}</td>
+      </tr>
     </tbody>
   </table>
 </template>
 
 <script lang="ts" setup>
-import {format, isSameDay} from 'date-fns';
+import { format, isSameDay } from 'date-fns';
 
 defineProps({
   items: {
@@ -41,6 +44,7 @@ defineProps({
       createdAt: string;
       nickname: string;
       commentCount: number;
+      views: number;
     }>,
     required: true,
   },
@@ -113,7 +117,7 @@ td {
 }
 
 .comment-count {
-  color: #FF0000;
+  color: #ff0000;
   font-weight: bold;
   text-decoration: none;
 }

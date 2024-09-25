@@ -2,7 +2,7 @@
   <div>
     <h1>{{ post.title }}</h1>
     <p class="fw-bold m-0">{{ post.nickname }}</p>
-    <p class="text-muted mb-1">{{ post.createdAt }}</p>
+    <p class="text-muted mb-1">{{ post.createdAt }} 조회 {{ post.views }}</p>
     <hr class="mt-1" />
     <p style="white-space: pre-line">{{ post.content }}</p>
     <hr class="mt-4 mb-2" />
@@ -53,6 +53,7 @@ interface Post {
   createdAt: string;
   memberId: string;
   nickname: string;
+  views: number;
 }
 
 const post = ref<Post>({
@@ -61,6 +62,7 @@ const post = ref<Post>({
   memberId: '',
   title: '',
   nickname: '',
+  views: 0,
 });
 
 const fetchPost = async () => {
@@ -68,16 +70,30 @@ const fetchPost = async () => {
     const { data } = await axios.get(`/api/posts/${props.id}`);
     setPost(data);
   } catch (error) {
-    console.log('error: ', error);
+    if (axios.isAxiosError(error)) {
+      const response = error.response;
+      if (response?.status === 404) {
+        await router.push({ name: 'NotFound', params: { catchAll: '404' } });
+      }
+      console.log('error: ', error);
+    }
   }
 };
 
-const setPost = ({ title, content, createdAt, memberId, nickname }: Post) => {
+const setPost = ({
+  title,
+  content,
+  createdAt,
+  memberId,
+  nickname,
+  views,
+}: Post) => {
   post.value.title = title;
   post.value.content = content;
   post.value.createdAt = createdAt;
   post.value.memberId = memberId;
   post.value.nickname = nickname;
+  post.value.views = views;
 };
 watch(() => props.id, fetchPost);
 
@@ -126,7 +142,7 @@ const moveToPrev = async () => {
 const moveToNext = async () => {
   try {
     const { data } = await axios.get(`/api/posts/${props.id}/next`);
-    router.replace({ name: 'PostDetail', params: { id: data.id } });
+    await router.replace({ name: 'PostDetail', params: { id: data.id } });
   } catch (error) {
     if (axios.isAxiosError(error)) {
       if (error.response?.status === 404) {

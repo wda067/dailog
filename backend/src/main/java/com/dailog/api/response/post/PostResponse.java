@@ -16,22 +16,22 @@ public class PostResponse {
 
     private final Long id;
     private final Long memberId;
-    private final String name;
     private final String nickname;
     private final String title;
     private final String content;
     private final String createdAt;
     private final String createdBy;
     private final int commentCount;
+    private final int views;
 
     public PostResponse(Post post) {
         this.id = post.getId();
         this.memberId = post.getMemberId();
-        this.title = post.getTitle();
+        this.title = post.getTitle().substring(0, Math.min(post.getTitle().length(), 60));
         this.content = post.getContent();
-        this.name = post.getMember().getName();
         this.nickname = post.getMember().getNickname();
         this.commentCount = post.getComments().size();
+        this.views = post.getViews();
 
         ZonedDateTime utcCreatedAt = post.getCreatedAt().atZone(ZoneId.of("UTC"));
         ZonedDateTime seoulCreatedAt = utcCreatedAt.withZoneSameInstant(ZoneId.of("Asia/Seoul"));
@@ -41,21 +41,20 @@ public class PostResponse {
     }
 
     @Builder
-    public PostResponse(Long id, Long memberId, String name, String nickname, String title, String content,
-                        LocalDateTime createdAt, String createdBy, int commentCount) {
+    public PostResponse(Long id, Long memberId, String nickname, String title, String content,
+                        LocalDateTime createdAt, String createdBy, int commentCount, int views) {
         this.id = id;
         this.memberId = memberId;
-        this.name = name;
         this.nickname = nickname;
         this.title = title.substring(0, Math.min(title.length(), 60));
         this.content = content;
         this.commentCount = commentCount;
+        this.views = views;
 
         ZonedDateTime utcCreatedAt = createdAt.atZone(ZoneId.of("UTC"));
         ZonedDateTime seoulCreatedAt = utcCreatedAt.withZoneSameInstant(ZoneId.of("Asia/Seoul"));
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         this.createdAt = seoulCreatedAt.format(formatter);
-        //this.updatedAt = updatedAt.format(formatter);
         this.createdBy = createdBy;
     }
 }

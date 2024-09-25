@@ -44,21 +44,14 @@ public class PostService {
         postRepository.save(post);
     }
 
+    @Transactional
     public PostResponse get(Long id) {
         Post post = postRepository.findById(id)
                 .orElseThrow(PostNotFound::new);
 
         post.updateViews();
 
-        return PostResponse.builder()
-                .id(post.getId())
-                .memberId(post.getMemberId())
-                .nickname(post.getMember().getNickname())
-                .title(post.getTitle())
-                .content(post.getContent())
-                .createdAt(post.getCreatedAt())
-                .createdBy(post.getCreatedBy())
-                .build();
+        return new PostResponse(post);
     }
 
     //글이 너무 많은 경우 비용이 너무 많이 든다. -> page와 size를 request로 받아 조회

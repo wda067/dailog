@@ -52,6 +52,7 @@ const posts = ref(
     createdAt: string;
     nickname: string;
     commentCount: number;
+    views: number;
   }>,
 );
 const totalCount = ref(0);
