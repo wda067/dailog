@@ -35,7 +35,7 @@ export async function useOAuth2Redirect() {
       } else {
         alert('접근할 수 없는 페이지입니다.');
       }
-      await router.replace({name: 'HomeView'});
+      await router.replace({ name: 'HomeView' });
     } catch (error) {
       if (axios.isAxiosError(error)) {
         console.error('Error fetching profile:', error.response?.statusText);

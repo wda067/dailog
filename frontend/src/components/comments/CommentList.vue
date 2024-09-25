@@ -1,10 +1,8 @@
 <template>
   <ul style="padding-left: 0">
     <li v-for="item in items" :key="item.id" class="card" style="border: none">
-
       <!--수정 중인 댓글-->
       <div v-if="isEditingComment(item.id)" class="mt-3">
-
         <!--익명 댓글은 누구나 수정 가능-->
         <div v-if="item.anonymousName != null">
           <CommentForm
@@ -209,7 +207,7 @@ const temp = (a: string, b: string) => {
   console.log(a);
   console.log(b);
   console.log(a === b);
-  console.log(b != '')
+  console.log(b != '');
 };
 
 const emits = defineEmits(['delete:comment', 'edit:comment']);

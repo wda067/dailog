@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import {useAuthStore} from "@/stores/auth";
+import { useAuthStore } from '@/stores/auth';
 
 export function useHealthCheck() {
   const isServerAlive = ref(true);
@@ -22,7 +22,7 @@ export function useHealthCheck() {
       if (wasServerDown.value) {
         wasServerDown.value = false;
         window.location.reload();
-        await router.replace({name: 'HomeView'});
+        await router.replace({ name: 'HomeView' });
       }
     } catch (error) {
       console.error('Server connection failed:', error);

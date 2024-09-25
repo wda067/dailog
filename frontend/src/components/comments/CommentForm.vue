@@ -80,8 +80,7 @@ function updateContent(event: Event) {
   }
 }
 
-watch(showPassword, () => {
-});
+watch(showPassword, () => {});
 </script>
 
 <style scoped>

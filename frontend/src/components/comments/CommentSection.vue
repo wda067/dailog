@@ -166,11 +166,11 @@ const addCommentByAnonymous = async () => {
 };
 
 const editComment = async ({
-                             id,
-                             password,
-                             content,
-                             isAnonymousComment,
-                           }: {
+  id,
+  password,
+  content,
+  isAnonymousComment,
+}: {
   id: string;
   password: string;
   content: string;

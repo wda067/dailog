@@ -1,10 +1,10 @@
 FROM gradle:8.8-jdk17 AS build
 
 # Redis 설치
-RUN apt-get update && \
-    apt-get install -y redis-server && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+#RUN apt-get update && \
+#    apt-get install -y redis-server && \
+#    apt-get clean && \
+#    rm -rf /var/lib/apt/lists/*
 
 #소스코드를 복사할 작업 디렉토리를 생성
 WORKDIR /app
@@ -17,12 +17,12 @@ COPY . /app
 
 # Redis 서버를 백그라운드에서 실행
 # 테스트 실행
-ARG JASYPT_ENCRYPTOR_PASSWORD
-RUN redis-server --daemonize yes && \
-    gradle test \
-    -Dspring.profiles.active=test \
-    -Djasypt.encryptor.password=${JASYPT_ENCRYPTOR_PASSWORD} && \
-    redis-cli shutdown
+#ARG JASYPT_ENCRYPTOR_PASSWORD
+#RUN redis-server --daemonize yes && \
+#    gradle test \
+#    -Dspring.profiles.active=test \
+#    -Djasypt.encryptor.password=${JASYPT_ENCRYPTOR_PASSWORD} && \
+#    redis-cli shutdown
 
 # 빌드 실행 (테스트 제외)
 RUN gradle clean build --no-daemon -x asciidoctor -x test

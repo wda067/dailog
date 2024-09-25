@@ -26,7 +26,7 @@ const fetchAuthorizedPage = async (
         return await fetchAuthorizedPage(url);
       } else {
         alert('접근 권한이 없습니다.');
-        await router.push({name: 'LoginView'});
+        await router.push({ name: 'LoginView' });
       }
     }
   } catch (error) {

@@ -22,7 +22,7 @@
         <a
           class="btn btn-outline-dark ms-auto"
           @click.prevent="openModal('nickname')"
-        >별명 변경</a
+          >별명 변경</a
         >
       </div>
     </Transition>
@@ -39,7 +39,7 @@
         <div class="flex-row">
           <label class="form-label fixed-width">비밀번호</label>
           <a class="btn btn-outline-dark" @click.prevent="openModal('password')"
-          >비밀번호 변경</a
+            >비밀번호 변경</a
           >
         </div>
       </Transition>
@@ -78,7 +78,7 @@
           <hr class="mt-2" />
           <div v-if="isChangePassword || isDeleteAccount" class="modal-body">
             <label class="form-label" for="currentPassword"
-            >현재 비밀번호</label
+              >현재 비밀번호</label
             >
             <div class="position-relative mb-1">
               <input
@@ -103,7 +103,7 @@
 
             <div v-if="isChangePassword">
               <label class="form-label" for="newPassword"
-              >새로운 비밀번호</label
+                >새로운 비밀번호</label
               >
               <div class="position-relative mb-1">
                 <input
@@ -127,7 +127,7 @@
               </div>
 
               <label class="form-label" for="confirmNewPassword"
-              >새로운 비밀번호 확인</label
+                >새로운 비밀번호 확인</label
               >
               <div class="position-relative mb-1">
                 <input
@@ -300,14 +300,11 @@ const resetForm = () => {
 const changePassword = async () => {
   const memberId = Array.isArray(props.id) ? props.id[0] : props.id;
   try {
-    await axiosInstance.patch(
-      `/api/members/${memberId}/password`,
-      {
-        currentPassword: currentPassword.value,
-        newPassword: newPassword.value,
-        confirmPassword: confirmPassword.value,
-      },
-    );
+    await axiosInstance.patch(`/api/members/${memberId}/password`, {
+      currentPassword: currentPassword.value,
+      newPassword: newPassword.value,
+      confirmPassword: confirmPassword.value,
+    });
     await fetchProfile(memberId);
     vSuccess('비밀번호가 성공적으로 변경되었습니다.');
     closeModal();
@@ -334,12 +331,9 @@ const changePassword = async () => {
 const changeNickname = async () => {
   const memberId = Array.isArray(props.id) ? props.id[0] : props.id;
   try {
-    await axiosInstance.patch(
-      `/api/members/${memberId}/nickname`,
-      {
-        newNickname: newNickname.value,
-      },
-    );
+    await axiosInstance.patch(`/api/members/${memberId}/nickname`, {
+      newNickname: newNickname.value,
+    });
     await fetchProfile(memberId);
     await authStore.getUserInfo();
     vSuccess('별명이 성공적으로 변경되었습니다.');
@@ -451,14 +445,16 @@ onBeforeRouteUpdate((to, from, next) => {
   background: white;
   padding: 20px;
   border-radius: 8px;
-  transition: transform 0.3s ease-out,
-  opacity 0.3s ease-out;
+  transition:
+    transform 0.3s ease-out,
+    opacity 0.3s ease-out;
 }
 
 .slide-enter-active,
 .slide-leave-active {
-  transition: transform 0.3s ease-out,
-  opacity 0.3s ease-out;
+  transition:
+    transform 0.3s ease-out,
+    opacity 0.3s ease-out;
 }
 
 .slide-enter-from,
