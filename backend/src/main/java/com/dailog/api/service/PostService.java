@@ -16,6 +16,8 @@ import com.dailog.api.request.post.PostSearch;
 import com.dailog.api.response.PagingResponse;
 import com.dailog.api.response.post.PostIdResponse;
 import com.dailog.api.response.post.PostResponse;
+import com.dailog.api.util.JWTUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +35,7 @@ public class PostService {
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
     private final RedisTemplate<String, String> redisTemplate;
+    private final JWTUtil jwtUtil;
 
     @Transactional
     public void write(PostCreate postCreate, String email) {
@@ -56,7 +59,29 @@ public class PostService {
     }
 
     @Transactional
-    public void viewPost(Long postId, String userIdentifier) {
+    public void viewPost(Long postId, HttpServletRequest request) {
+        String userIdentifier = "";
+
+        String header = request.getHeader("Authorization");
+        //로그인된 사용자는 이메일을 사용
+        if (header != null) {
+            String access = header.substring("Bearer".length()).trim();
+            userIdentifier = jwtUtil.getUsername(access);
+        }
+        //비회원은 IP 주소와 User-Agent를 사용
+        else {
+            String ipAddress = request.getHeader("X-Forwarded-For");
+            if (ipAddress != null && !ipAddress.isEmpty()) {
+                //첫번째 주소가 일반적으로 클라이언트의 공인 IP 주소
+                ipAddress = ipAddress.split(",")[0].trim();
+            } else {
+                ipAddress = request.getRemoteAddr();
+            }
+            String userAgent = request.getHeader("User-Agent");
+
+            userIdentifier = ipAddress + ":" + userAgent.hashCode();
+        }
+
         String key = "post:viewed:" + postId + ":" + userIdentifier;
 
         Boolean hasViewed = redisTemplate.hasKey(key);

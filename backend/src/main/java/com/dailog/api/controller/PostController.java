@@ -96,22 +96,7 @@ public class PostController {
 
     @GetMapping("/api/posts/{postId}")
     public PostResponse get(@PathVariable Long postId, HttpServletRequest request) {
-        String userIdentifier = "";
-
-        String header = request.getHeader("Authorization");
-        if (header != null) {
-            String access = header.substring("Bearer".length()).trim();
-            userIdentifier = jWTUtil.getUsername(access);
-        } else {
-            String ipAddress = request.getHeader("X-Forwarded-For");
-            if (ipAddress == null || ipAddress.isEmpty()) {
-                ipAddress = request.getRemoteAddr();
-            }
-            String userAgent = request.getHeader("User-Agent");
-
-            userIdentifier = ipAddress + ":" + userAgent.hashCode();
-        }
-        postService.viewPost(postId, userIdentifier);
+        postService.viewPost(postId, request);
         return postService.get(postId);
     }
 
