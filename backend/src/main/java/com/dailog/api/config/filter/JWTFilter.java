@@ -1,6 +1,5 @@
 package com.dailog.api.config.filter;
 
-import static jakarta.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED;
 
 import com.dailog.api.config.CustomUserDetails;
@@ -20,12 +19,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Collection;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -115,12 +112,12 @@ public class JWTFilter extends OncePerRequestFilter {
         SecurityContextHolder.getContext().setAuthentication(authToken);
         log.info("JWTFilter authenticated");
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        log.info("authentication: {}", authentication);
+        //log.info("authentication: {}", authentication);
         log.info("authentication.isAuthenticated(): {}", authentication.isAuthenticated());
-        log.info("authentication.getAuthorities(): {}", authentication.getAuthorities());
-        log.info("authentication.getPrincipal(): {}", authentication.getPrincipal());
-        log.info("authentication.getCredentials(): {}", authentication.getCredentials());
-        log.info("authentication.getDetails(): {}", authentication.getDetails());
+        //log.info("authentication.getAuthorities(): {}", authentication.getAuthorities());
+        //log.info("authentication.getPrincipal(): {}", authentication.getPrincipal());
+        //log.info("authentication.getCredentials(): {}", authentication.getCredentials());
+        //log.info("authentication.getDetails(): {}", authentication.getDetails());
         filterChain.doFilter(request, response);
     }
 
