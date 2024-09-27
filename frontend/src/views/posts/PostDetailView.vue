@@ -29,6 +29,7 @@ import { useAlert } from '@/composables/useAlert';
 import PostButtons from '@/components/posts/PostButtons.vue';
 import CommentSection from '@/components/comments/CommentSection.vue';
 import { useAuthStore } from '@/stores/auth';
+import axiosInstance from '@/composables/useApi'
 
 const { vAlert, vSuccess } = useAlert();
 
@@ -67,7 +68,7 @@ const post = ref<Post>({
 
 const fetchPost = async () => {
   try {
-    const { data } = await axios.get(`/api/posts/${props.id}`);
+    const { data } = await axiosInstance.get(`/api/posts/${props.id}`);
     setPost(data);
   } catch (error) {
     if (axios.isAxiosError(error)) {

@@ -16,9 +16,12 @@ import com.dailog.api.request.post.PostSearch;
 import com.dailog.api.response.PagingResponse;
 import com.dailog.api.response.post.PostIdResponse;
 import com.dailog.api.response.post.PostResponse;
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +32,7 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
+    private final RedisTemplate<String, String> redisTemplate;
 
     @Transactional
     public void write(PostCreate postCreate, String email) {
@@ -44,14 +48,30 @@ public class PostService {
         postRepository.save(post);
     }
 
-    @Transactional
-    public PostResponse get(Long id) {
-        Post post = postRepository.findById(id)
+    public PostResponse get(Long postId) {
+        Post post = postRepository.findById(postId)
                 .orElseThrow(PostNotFound::new);
 
-        post.updateViews();
-
         return new PostResponse(post);
+    }
+
+    @Transactional
+    public void viewPost(Long postId, String userIdentifier) {
+        String key = "post:viewed:" + postId + ":" + userIdentifier;
+
+        Boolean hasViewed = redisTemplate.hasKey(key);
+        if (Boolean.FALSE.equals(hasViewed)) {
+            increaseViews(postId);
+            redisTemplate.expire(key, 24, TimeUnit.HOURS);
+            redisTemplate.opsForValue().set(key, "viewed", Duration.ofHours(24));
+        }
+    }
+
+    @Transactional
+    public void increaseViews(Long postId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(PostNotFound::new);
+        post.updateViews();
     }
 
     //글이 너무 많은 경우 비용이 너무 많이 든다. -> page와 size를 request로 받아 조회
