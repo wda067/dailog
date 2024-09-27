@@ -40,5 +40,5 @@ jobs:
         tags: |
           ${{ secrets.DOCKERHUB_USERNAME }}/dailog-backend:${{ github.sha }}
           ${{ secrets.DOCKERHUB_USERNAME }}/dailog-backend:latest
-#        build-args:
-#          JASYPT_ENCRYPTOR_PASSWORD=${{ secrets.JASYPT_ENCRYPTOR_PASSWORD }}
+        build-args:
+          JASYPT_ENCRYPTOR_PASSWORD=${{ secrets.JASYPT_ENCRYPTOR_PASSWORD }}
