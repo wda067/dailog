@@ -6,6 +6,7 @@ build/
 !**/src/test/**/build/
 .env
 backend/http
+docker-compose.local.yml
 
 ### STS ###
 .apt_generated

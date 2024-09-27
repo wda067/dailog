@@ -29,13 +29,13 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile-local
-      args:
-        - JASYPT_ENCRYPTOR_PASSWORD=${JASYPT_ENCRYPTOR_PASSWORD}
+#      args:
+#        - JASYPT_ENCRYPTOR_PASSWORD=${JASYPT_ENCRYPTOR_PASSWORD}
     environment:
-      - JASYPT_ENCRYPTOR_PASSWORD=${JASYPT_ENCRYPTOR_PASSWORD}
       - DB_URL=dailog-mysql
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-local}
       - REDIS_HOST=cache-server
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-local}
+      - JASYPT_ENCRYPTOR_PASSWORD=${JASYPT_ENCRYPTOR_PASSWORD}
     ports:
       - "8080:8080"
       - "5005:5005"
