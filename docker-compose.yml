@@ -22,7 +22,7 @@ services:
     restart: always
 
   cache-server:
-    image: redis
+    image: redis:alpine
     ports:
       - "6379:6379"
 
@@ -31,12 +31,12 @@ services:
     pull_policy: always
     environment:
       - DB_URL=dailog-mysql
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-local}
-      - JASYPT_ENCRYPTOR_PASSWORD=${JASYPT_ENCRYPTOR_PASSWORD}
       - REDIS_HOST=cache-server
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - JASYPT_ENCRYPTOR_PASSWORD=${JASYPT_ENCRYPTOR_PASSWORD}
     depends_on:
-      - dailog-mysql
       - cache-server
+      - dailog-mysql
     deploy:
       resources:
         limits:
