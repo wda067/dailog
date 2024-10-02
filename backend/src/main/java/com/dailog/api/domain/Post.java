@@ -10,7 +10,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import java.util.ArrayList;
@@ -77,7 +76,11 @@ public class Post extends BaseEntity {
         this.comments.add(comment);
     }
 
-    public void updateViews() {
-        this.views++;
+    public void increaseViews() {
+        this.views += 1;
+    }
+
+    public void updateViews(Integer views) {
+        this.views = views;
     }
 }

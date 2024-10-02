@@ -21,21 +21,28 @@ services:
     restart: always
 
   cache-server:
+    container_name: redis
     image: redis:alpine
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    command:
+      - /bin/sh
+      - -c
+      - redis-server --requirepass "$${REDIS_PASSWORD:?REDIS_PASSWORD variable is not set}"
     ports:
       - "6379:6379"
 
   dailog-backend:
+    container_name: backend
     build:
       context: ./backend
       dockerfile: Dockerfile-local
-#      args:
-#        - JASYPT_ENCRYPTOR_PASSWORD=${JASYPT_ENCRYPTOR_PASSWORD}
     environment:
       - DB_URL=dailog-mysql
       - REDIS_HOST=cache-server
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-local}
       - JASYPT_ENCRYPTOR_PASSWORD=${JASYPT_ENCRYPTOR_PASSWORD}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     ports:
       - "8080:8080"
       - "5005:5005"
@@ -50,6 +57,7 @@ services:
     restart: on-failure
 
   dailog-frontend:
+    container_name: frontend
     build:
       context: ./frontend
       dockerfile: Dockerfile-local

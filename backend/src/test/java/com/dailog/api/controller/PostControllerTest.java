@@ -3,7 +3,6 @@ package com.dailog.api.controller;
 import static java.time.LocalDateTime.now;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -15,16 +14,22 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.dailog.api.config.CustomMockAdmin;
 import com.dailog.api.config.CustomMockMember;
-import com.dailog.api.config.CustomMockOAuth2Account;
 import com.dailog.api.domain.Member;
 import com.dailog.api.domain.Post;
 import com.dailog.api.domain.enums.Role;
+import com.dailog.api.exception.post.PostNotFound;
 import com.dailog.api.repository.member.MemberRepository;
 import com.dailog.api.repository.post.PostRepository;
 import com.dailog.api.request.post.PostCreate;
 import com.dailog.api.request.post.PostEdit;
+import com.dailog.api.service.PostService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -32,8 +37,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.transaction.annotation.Transactional;
 
 @AutoConfigureMockMvc  //MockMvc 빈 주입
 @SpringBootTest
@@ -41,23 +50,25 @@ class PostControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
-
     @Autowired
     private MockMvc mockMvc;
-
     @Autowired
     private PostRepository postRepository;
-
     @Autowired
     private MemberRepository memberRepository;
-
     @Autowired
     private JdbcTemplate jdbcTemplate;
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
     @AfterEach
     void clean() {
         postRepository.deleteAll();
         memberRepository.deleteAll();
+        Set<String> keys = redisTemplate.keys("*");
+        if (keys != null && !keys.isEmpty()) {
+            redisTemplate.delete(keys);
+        }
     }
 
     @Test
@@ -693,5 +704,56 @@ class PostControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(posts.get(2).getId().intValue())))
                 .andDo(print());
+    }
+
+    @Test
+    @CustomMockMember
+    @DisplayName("1000명의 다른 사용자가 동시에 게시글을 조회한다.")
+    void should_IncreaseViews_When_1000UsersViewPostSimultaneously() throws Exception {
+        //given
+        PostCreate postCreate = PostCreate.builder()
+                .title("제목")
+                .content("내용")
+                .build();
+        String json = objectMapper.writeValueAsString(postCreate);
+        //게시글 작성 API 요청
+        mockMvc.perform(post("/api/posts")
+                        .contentType(APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isOk());
+
+        int userCount = 1000;
+        ExecutorService executorService = Executors.newFixedThreadPool(userCount);
+        CountDownLatch latch = new CountDownLatch(userCount);  //1000개의 요청을 동시에 시작하도록 제어하는 래치 설정
+
+        Long postId = postRepository.findAll().get(0).getId();
+
+        //when
+        for (int i = 0; i < userCount; i++) {
+            int userId = i;
+            executorService.execute(() -> {
+                try {
+                    //게시글 조회 API 요청
+                    mockMvc.perform(MockMvcRequestBuilders.get("/api/posts/" + postId)
+                                    .remoteAddress("test.ip." + userId)
+                                    .contentType(MediaType.APPLICATION_JSON))
+                            .andExpect(status().isOk());
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                } finally {
+                    latch.countDown();  //요청 완료 시 카운트 감소
+                }
+            });
+        }
+
+        latch.await();  //모든 요청이 완료될 때까지 대기
+
+        //then
+        assertEquals(1L, postRepository.count());
+
+        Post findPost = postRepository.findById(postId)
+                .orElseThrow(PostNotFound::new);
+        Integer views = (Integer) redisTemplate.opsForValue().get("post:views:" + findPost.getId());
+        assertEquals(userCount, views);
     }
 }

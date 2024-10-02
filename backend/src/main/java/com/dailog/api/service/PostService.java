@@ -19,11 +19,14 @@ import com.dailog.api.response.post.PostResponse;
 import com.dailog.api.util.JWTUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,7 +37,7 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
-    private final RedisTemplate<String, String> redisTemplate;
+    private final RedisTemplate<String, Object> redisTemplate;
     private final JWTUtil jwtUtil;
 
     @Transactional
@@ -54,49 +57,62 @@ public class PostService {
     public PostResponse get(Long postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(PostNotFound::new);
-
-        return new PostResponse(post);
+        return new PostResponse(post, getViews(postId));
     }
 
     @Transactional
     public void viewPost(Long postId, HttpServletRequest request) {
-        String userIdentifier = "";
+        String key = "post:viewed:" + postId + ":" + getUserId(request);
 
-        String header = request.getHeader("Authorization");
-        //로그인된 사용자는 이메일을 사용
-        if (header != null) {
-            String access = header.substring("Bearer".length()).trim();
-            userIdentifier = jwtUtil.getUsername(access);
-        }
-        //비회원은 IP 주소와 User-Agent를 사용
-        else {
-            String ipAddress = request.getHeader("X-Forwarded-For");
-            if (ipAddress != null && !ipAddress.isEmpty()) {
-                //첫번째 주소가 일반적으로 클라이언트의 공인 IP 주소
-                ipAddress = ipAddress.split(",")[0].trim();
-            } else {
-                ipAddress = request.getRemoteAddr();
-            }
-            String userAgent = request.getHeader("User-Agent");
+        //key가 없으면 값을 설정하고 true 반환, key가 존재하면 값을 변경하지 않고 false 반환
+        Boolean isNotViewed = redisTemplate.opsForValue().setIfAbsent(key, "Viewed", Duration.ofHours(24));
 
-            userIdentifier = ipAddress + ":" + userAgent.hashCode();
-        }
-
-        String key = "post:viewed:" + postId + ":" + userIdentifier;
-
-        Boolean hasViewed = redisTemplate.hasKey(key);
-        if (Boolean.FALSE.equals(hasViewed)) {
-            increaseViews(postId);
-            redisTemplate.expire(key, 24, TimeUnit.HOURS);
-            redisTemplate.opsForValue().set(key, "viewed", Duration.ofHours(24));
+        //24시간 내에 조회한 적이 없을 경우 조회수 증가
+        if (Boolean.TRUE.equals(isNotViewed)) {
+            //조회수의 동시성 제어를 위해 비관적 락을 걸어 조회
+            //Post post = postRepository.findByIdWithLock(postId)
+            //        .orElseThrow(PostNotFound::new);
+            //post.increaseViews();
+            //postRepository.increaseViews(postId);
+            incrementViews(postId);
         }
     }
 
+    public void incrementViews(Long postId) {
+        String key = "post:views:" + postId;
+        redisTemplate.opsForValue().increment(key);
+    }
+
+    public int getViews(Long postId) {
+        String key = "post:views:" + postId;
+        Object currentViews = redisTemplate.opsForValue().get(key);
+        if (currentViews == null) {
+            int initialViews = 0;
+            redisTemplate.opsForValue().set(key, initialViews);
+            return initialViews;
+        }
+        return  (Integer) currentViews;
+    }
+
+    //@Scheduled(cron = "0 0 5 * * ?")  //오전 5시에 실행
+    @Scheduled(cron = "0 */10 * * * ?")  //10분마다 실행
     @Transactional
-    public void increaseViews(Long postId) {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(PostNotFound::new);
-        post.updateViews();
+    public void updateViewCountsToDatabase() {
+        Set<String> keys = redisTemplate.keys("post:views:*");
+
+        if (keys != null) {
+            for (String key : keys) {
+                Long postId = Long.parseLong(key.split(":")[2]);
+                Integer views = (Integer) redisTemplate.opsForValue().get(key);
+
+                if (views != null) {
+                    Post post = postRepository.findById(postId)
+                            .orElseThrow(PostNotFound::new);
+                    post.updateViews(views);
+                }
+            }
+            redisTemplate.delete(keys);
+        }
     }
 
     //글이 너무 많은 경우 비용이 너무 많이 든다. -> page와 size를 request로 받아 조회
@@ -110,34 +126,12 @@ public class PostService {
     public PagingResponse<PostResponse> getList(PostSearch postSearch, PostPageRequest postPageRequest) {
         Page<Post> postPage = postRepository.getList(postSearch, postPageRequest);
 
+        for (Post post : postPage.getContent()) {
+            post.updateViews(getViews(post.getId()));
+        }
+
         return new PagingResponse<>(postPage, PostResponse.class);
     }
-
-    //public PostResponse getPrevPost(long id) {
-    //    Post prevPost = postRepository.findPrevPost(id)
-    //            .orElseThrow(PostNotFound::new);
-    //
-    //    return PostResponse.builder()
-    //            .id(prevPost.getId())
-    //            .title(prevPost.getTitle())
-    //            .content(prevPost.getContent())
-    //            .createdAt(prevPost.getCreatedAt())
-    //            .createdBy(prevPost.getCreatedBy())
-    //            .build();
-    //}
-    //
-    //public PostResponse getNextPost(long id) {
-    //    Post prevPost = postRepository.findNextPost(id)
-    //            .orElseThrow(PostNotFound::new);
-    //
-    //    return PostResponse.builder()
-    //            .id(prevPost.getId())
-    //            .title(prevPost.getTitle())
-    //            .content(prevPost.getContent())
-    //            .createdAt(prevPost.getCreatedAt())
-    //            .createdBy(prevPost.getCreatedBy())
-    //            .build();
-    //}
 
     public PostIdResponse getPrevPostId(Long postId) {
         Long prevPostId = postRepository.findPrevPostId(postId);
@@ -195,5 +189,36 @@ public class PostService {
         if (isNotWriter) {
             throw new ForbiddenPostAccess();
         }
+    }
+
+    private String getUserId(HttpServletRequest request) {
+        String userIdentifier;
+
+        String header = request.getHeader("Authorization");
+        //로그인된 사용자는 이메일을 사용
+        if (header != null) {
+            String access = header.substring("Bearer".length()).trim();
+            userIdentifier = "user:" + (long) jwtUtil.getUsername(access).hashCode();
+        }
+        //비회원은 IP 주소와 User-Agent를 사용
+        else {
+            String ipAddress = request.getHeader("X-Forwarded-For");
+            if (ipAddress != null && !ipAddress.isEmpty()) {
+                //첫번째 주소가 일반적으로 클라이언트의 공인 IP 주소
+                ipAddress = ipAddress.split(",")[0].trim();
+            } else {
+                ipAddress = request.getRemoteAddr();
+            }
+
+            String userAgent = request.getHeader("User-Agent");
+            if (userAgent == null || userAgent.isEmpty()) {
+                userIdentifier = "guest:" + ipAddress.hashCode();
+            } else {
+                String identifier = ipAddress + userAgent;
+                userIdentifier = "guest:" + (long) identifier.hashCode();
+            }
+        }
+
+        return userIdentifier;
     }
 }

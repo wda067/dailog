@@ -16,6 +16,7 @@ spring:
     redis:
       host: ${REDIS_HOST}
       port: 6379
+      password:
 
   h2:
     console:
