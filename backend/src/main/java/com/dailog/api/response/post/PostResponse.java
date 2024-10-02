@@ -7,6 +7,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 
 /**
  * 서비스 정책에 맞는 클래스
@@ -32,6 +33,22 @@ public class PostResponse {
         this.nickname = post.getMember().getNickname();
         this.commentCount = post.getComments().size();
         this.views = post.getViews();
+
+        ZonedDateTime utcCreatedAt = post.getCreatedAt().atZone(ZoneId.of("UTC"));
+        ZonedDateTime seoulCreatedAt = utcCreatedAt.withZoneSameInstant(ZoneId.of("Asia/Seoul"));
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        this.createdAt = seoulCreatedAt.format(formatter);
+        this.createdBy = post.getCreatedBy();
+    }
+
+    public PostResponse(Post post, int views) {
+        this.id = post.getId();
+        this.memberId = post.getMemberId();
+        this.title = post.getTitle().substring(0, Math.min(post.getTitle().length(), 60));
+        this.content = post.getContent();
+        this.nickname = post.getMember().getNickname();
+        this.commentCount = post.getComments().size();
+        this.views = views;
 
         ZonedDateTime utcCreatedAt = post.getCreatedAt().atZone(ZoneId.of("UTC"));
         ZonedDateTime seoulCreatedAt = utcCreatedAt.withZoneSameInstant(ZoneId.of("Asia/Seoul"));
