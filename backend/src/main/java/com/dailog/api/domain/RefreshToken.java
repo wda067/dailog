@@ -13,10 +13,10 @@ public class RefreshToken {
     @Id
     private String username;
 
-    private String refreshToken;
+    private final String refreshToken;
 
     @TimeToLive
-    private long expiration;
+    private final long expiration;
 
     @Builder
     public RefreshToken(String username, String refreshToken, long expiration) {
