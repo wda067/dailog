@@ -22,11 +22,19 @@ services:
     restart: always
 
   cache-server:
+    container_name: redis
     image: redis:alpine
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    command:
+      - /bin/sh
+      - -c
+      - redis-server --requirepass "$${REDIS_PASSWORD:?REDIS_PASSWORD variable is not set}"
     ports:
       - "6379:6379"
 
   dailog-backend:
+    container_name: backend
     image: ${DOCKERHUB_USERNAME}/dailog-backend
     pull_policy: always
     environment:
@@ -45,6 +53,7 @@ services:
     restart: on-failure
 
   dailog-frontend:
+    container_name: frontend
     image: ${DOCKERHUB_USERNAME}/dailog-frontend
     pull_policy: always
     ports:
