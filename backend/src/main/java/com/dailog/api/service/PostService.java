@@ -86,18 +86,23 @@ public class PostService {
     public int getViews(Long postId) {
         String key = "post:views:" + postId;
         Object currentViews = redisTemplate.opsForValue().get(key);
+
         if (currentViews == null) {
-            int initialViews = 0;
-            redisTemplate.opsForValue().set(key, initialViews);
-            return initialViews;
+            Post post = postRepository.findById(postId)
+                    .orElseThrow(PostNotFound::new);
+            int dbViews = post.getViews();
+            redisTemplate.opsForValue().set(key, dbViews);
+            return dbViews;
         }
+
         return  (Integer) currentViews;
     }
 
     //@Scheduled(cron = "0 0 5 * * ?")  //오전 5시에 실행
     @Scheduled(cron = "0 */10 * * * ?")  //10분마다 실행
     @Transactional
-    public void updateViewCountsToDatabase() {
+    public void updateViewsToDatabase() {
+        log.info("Scheduled updateViewsToDatabase");
         Set<String> keys = redisTemplate.keys("post:views:*");
 
         if (keys != null) {
