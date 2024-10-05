@@ -6,10 +6,10 @@ services:
     pull_policy: always
     container_name: mysql-db
     environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-1234}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_DATABASE=dailog
       - MYSQL_USER=myuser
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-mypassword}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
     ports:
       - 3306:3306
     volumes:
