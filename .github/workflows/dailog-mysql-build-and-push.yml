@@ -43,4 +43,4 @@ jobs:
           ${{ secrets.DOCKERHUB_USERNAME }}/dailog-mysql:${{ github.sha }}
           ${{ secrets.DOCKERHUB_USERNAME }}/dailog-mysql:latest
         build-args:
-          MYSQL_ROOT_PASSWORD= ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
