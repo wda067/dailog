@@ -21,16 +21,23 @@ public class CommentResponse {
     private final String content;
     private final String createdAt;
     private final String updatedAt;
+    private final String ipAddress;
 
     @Builder
     public CommentResponse(Long id, String nickname, Long memberId, String anonymousName, String password,
-                           String content, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                           String content, LocalDateTime createdAt, LocalDateTime updatedAt, String ipAddress) {
         this.id = id;
         this.nickname = nickname;
         this.memberId = memberId;
         this.anonymousName = anonymousName;
         this.password = password;
         this.content = content;
+        if (ipAddress != null) {
+            String[] split = ipAddress.split("\\.");
+            this.ipAddress = split[0] + "." + split[1];
+        } else {
+            this.ipAddress = "";
+        }
 
         ZonedDateTime utcCreatedAt = createdAt.atZone(ZoneId.of("UTC"));
         ZonedDateTime seoulCreatedAt = utcCreatedAt.withZoneSameInstant(ZoneId.of("Asia/Seoul"));

@@ -10,6 +10,7 @@ import com.dailog.api.request.comment.CommentEditForMember;
 import com.dailog.api.request.oAuth2.CustomOAuth2User;
 import com.dailog.api.response.comment.CommentResponse;
 import com.dailog.api.service.CommentService;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,8 +32,8 @@ public class CommentController {
     private final CommentService commentService;
 
     @GetMapping("/api/posts/{postId}/comments")
-    public List<CommentResponse> get(@PathVariable Long postId) {
-        return commentService.get(postId);
+    public List<CommentResponse> get(@PathVariable Long postId, HttpServletRequest request) {
+        return commentService.get(postId, request);
     }
 
     @PostMapping("/api/posts/{postId}/comments/member")

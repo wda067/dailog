@@ -68,8 +68,11 @@
       <div v-else class="d-flex justify-content-between">
         <div class="card-body">
           <h6 class="card-title">
-            <strong>
+            <strong v-if="item.anonymousName == null">
               {{ getCommenterName(item) }}
+            </strong>
+            <strong v-else>
+              {{ getCommenterName(item) }} ({{ item.ipAddress }})
             </strong>
           </h6>
           <p class="card-text mb-1">{{ item.content }}</p>
@@ -196,6 +199,7 @@ interface Comment {
   content: string;
   createdAt: string;
   updatedAt: string;
+  ipAddress: string;
 }
 
 defineProps<{

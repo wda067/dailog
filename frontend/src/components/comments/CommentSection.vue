@@ -43,6 +43,7 @@ interface Comment {
   content: string;
   createdAt: string;
   updatedAt: string;
+  ipAddress: string;
 }
 
 interface NewComment {
