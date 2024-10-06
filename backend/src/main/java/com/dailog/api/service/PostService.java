@@ -207,13 +207,7 @@ public class PostService {
         }
         //비회원은 IP 주소와 User-Agent를 사용
         else {
-            String ipAddress = request.getHeader("X-Forwarded-For");
-            if (ipAddress != null && !ipAddress.isEmpty()) {
-                //첫번째 주소가 일반적으로 클라이언트의 공인 IP 주소
-                ipAddress = ipAddress.split(",")[0].trim();
-            } else {
-                ipAddress = request.getRemoteAddr();
-            }
+            String ipAddress = request.getRemoteAddr();
 
             String userAgent = request.getHeader("User-Agent");
             if (userAgent == null || userAgent.isEmpty()) {

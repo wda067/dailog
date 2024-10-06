@@ -82,9 +82,7 @@ public class CommentService {
                                         .content(comment.getContent())
                                         .createdAt(comment.getCreatedAt())
                                         .updatedAt(comment.getUpdatedAt())
-                                        .ipAddress(request.getHeader("X-Forwarded-For")
-                                                .split(",")[0]
-                                                .trim())
+                                        .ipAddress(request.getRemoteAddr())
                                         .build();
                             }
                             return CommentResponse.builder()
