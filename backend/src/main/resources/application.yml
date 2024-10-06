@@ -81,3 +81,6 @@ jwt:
 jasypt:
   encryptor:
     password: ${JASYPT_ENCRYPTOR_PASSWORD}
+
+server:
+  forward-headers-strategy: native
