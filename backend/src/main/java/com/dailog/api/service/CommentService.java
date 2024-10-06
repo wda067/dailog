@@ -19,6 +19,7 @@ import com.dailog.api.request.comment.CommentDelete;
 import com.dailog.api.request.comment.CommentEditForAnonymous;
 import com.dailog.api.request.comment.CommentEditForMember;
 import com.dailog.api.response.comment.CommentResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -68,7 +69,7 @@ public class CommentService {
         post.addComment(comment);
     }
 
-    public List<CommentResponse> get(Long postId) {
+    public List<CommentResponse> get(Long postId, HttpServletRequest request) {
         List<Comment> comments = commentRepository.findByPostId(postId);
 
         return comments.stream()
@@ -81,6 +82,9 @@ public class CommentService {
                                         .content(comment.getContent())
                                         .createdAt(comment.getCreatedAt())
                                         .updatedAt(comment.getUpdatedAt())
+                                        .ipAddress(request.getHeader("X-Forwarded-For")
+                                                .split(",")[0]
+                                                .trim())
                                         .build();
                             }
                             return CommentResponse.builder()
