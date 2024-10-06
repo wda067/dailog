@@ -33,6 +33,11 @@ public class CommentController {
 
     @GetMapping("/api/posts/{postId}/comments")
     public List<CommentResponse> get(@PathVariable Long postId, HttpServletRequest request) {
+        log.info("request.getHeader('X-Forwarded-For'): {}", request.getHeader("X-Forwarded-For"));
+        log.info("request.getRemoteAddr(): {}", request.getRemoteAddr());
+        log.info("request.getRequestURI(): {}", request.getRequestURI());
+        log.info("request.getHeader('Proxy-Client-IP'): {}", request.getHeader("Proxy-Client-IP"));
+        log.info("Request.getHeader('HTTP_CLIENT_IP'): {}", request.getHeader("HTTP_CLIENT_IP"));
         return commentService.get(postId, request);
     }
 
