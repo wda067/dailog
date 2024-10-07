@@ -51,13 +51,17 @@ public class Comment extends BaseEntity {
     @JoinColumn(name = "post_id")
     private Post post;
 
+    @Column
+    private String ipAddress;
+
     @Builder
-    public Comment(Member member, String anonymousName, String password, String content, Post post) {
+    public Comment(Member member, String anonymousName, String password, String content, Post post, String ipAddress) {
         this.member = member;
         this.anonymousName = anonymousName;
         this.password = password;
         this.content = content;
         this.post = post;
+        this.ipAddress = ipAddress;
     }
 
     public CommentEditorBuilder toEditor() {
