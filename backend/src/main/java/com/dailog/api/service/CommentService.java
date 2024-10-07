@@ -19,7 +19,6 @@ import com.dailog.api.request.comment.CommentDelete;
 import com.dailog.api.request.comment.CommentEditForAnonymous;
 import com.dailog.api.request.comment.CommentEditForMember;
 import com.dailog.api.response.comment.CommentResponse;
-import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -55,7 +54,7 @@ public class CommentService {
     }
 
     @Transactional
-    public void writeByAnonymous(Long postId, CommentCreateForAnonymous request) {
+    public void writeByAnonymous(Long postId, CommentCreateForAnonymous request, String ipAddress) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(PostNotFound::new);
 
@@ -64,12 +63,13 @@ public class CommentService {
                 .anonymousName(request.getAnonymousName())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .content(request.getContent())
+                .ipAddress(ipAddress)
                 .build();
 
         post.addComment(comment);
     }
 
-    public List<CommentResponse> get(Long postId, HttpServletRequest request) {
+    public List<CommentResponse> get(Long postId) {
         List<Comment> comments = commentRepository.findByPostId(postId);
 
         return comments.stream()
@@ -82,7 +82,7 @@ public class CommentService {
                                         .content(comment.getContent())
                                         .createdAt(comment.getCreatedAt())
                                         .updatedAt(comment.getUpdatedAt())
-                                        .ipAddress(request.getRemoteAddr())
+                                        .ipAddress(comment.getIpAddress())
                                         .build();
                             }
                             return CommentResponse.builder()

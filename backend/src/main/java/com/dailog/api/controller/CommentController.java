@@ -30,15 +30,10 @@ import org.springframework.web.bind.annotation.RestController;
 public class CommentController {
 
     private final CommentService commentService;
-
+    
     @GetMapping("/api/posts/{postId}/comments")
-    public List<CommentResponse> get(@PathVariable Long postId, HttpServletRequest request) {
-        log.info("request.getHeader('X-Forwarded-For'): {}", request.getHeader("X-Forwarded-For"));
-        log.info("request.getRemoteAddr(): {}", request.getRemoteAddr());
-        log.info("request.getRequestURI(): {}", request.getRequestURI());
-        log.info("request.getHeader('Proxy-Client-IP'): {}", request.getHeader("Proxy-Client-IP"));
-        log.info("Request.getHeader('HTTP_CLIENT_IP'): {}", request.getHeader("HTTP_CLIENT_IP"));
-        return commentService.get(postId, request);
+    public List<CommentResponse> get(@PathVariable Long postId) {
+        return commentService.get(postId);
     }
 
     @PostMapping("/api/posts/{postId}/comments/member")
@@ -53,8 +48,9 @@ public class CommentController {
 
     @PostMapping("/api/posts/{postId}/comments/anonymous")
     public void writeByAnonymous(@PathVariable Long postId,
-                                 @RequestBody @Validated CommentCreateForAnonymous request) {
-        commentService.writeByAnonymous(postId, request);
+                                 @RequestBody @Validated CommentCreateForAnonymous create,
+                                 HttpServletRequest request) {
+        commentService.writeByAnonymous(postId, create, request.getRemoteAddr());
     }
 
     //@PreAuthorize("hasRole('ROLE_MEMBER')")
