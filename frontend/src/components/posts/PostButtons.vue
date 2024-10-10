@@ -1,5 +1,5 @@
 <template>
-  <div class="row g-2 mb-3">
+  <div class="row g-2">
     <div class="col-auto">
       <button class="btn btn-outline-dark" @click="$emit('move-to-prev')">
         이전 글
@@ -10,7 +10,6 @@
         다음 글
       </button>
     </div>
-    <div class="col-auto me-auto"></div>
     <div class="col-auto">
       <button class="btn btn-outline-dark" @click="$emit('move-to-list')">
         목록

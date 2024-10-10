@@ -2,24 +2,27 @@
   <div>
     <h2>{{ post.title }}</h2>
     <p class="fw-bold m-0">{{ post.nickname }}</p>
-    <p class="mb-1">
+    <p class="m-0">
       <small class="text-muted">
         {{ post.createdAt }} 조회 {{ post.views }}
       </small>
     </p>
-    <hr class="mt-1" />
+    <hr class="mt-1 mb-1" />
     <p style="white-space: normal">{{ post.content }}</p>
-    <hr class="mt-4 mb-2" />
 
-    <PostButtons
-      :hasAuthorized="hasAuthorized"
-      :postId="props.id"
-      @remove="remove"
-      @move-to-prev="moveToPrev"
-      @move-to-next="moveToNext"
-      @move-to-list="moveToList"
-      @move-to-edit="moveToEdit"
-    />
+    <div class="d-flex justify-content-between align-items-center">
+      <p class="mb-0">댓글 <strong>{{ post.commentCount }}</strong></p>
+      <PostButtons
+        :hasAuthorized="hasAuthorized"
+        :postId="props.id"
+        @remove="remove"
+        @move-to-prev="moveToPrev"
+        @move-to-next="moveToNext"
+        @move-to-list="moveToList"
+        @move-to-edit="moveToEdit"
+      />
+    </div>
+    <hr class="mt-1 mb-1" />
 
     <CommentSection :postId="props.id" />
   </div>
@@ -59,6 +62,7 @@ interface Post {
   memberId: string;
   nickname: string;
   views: number;
+  commentCount: number;
 }
 
 const post = ref<Post>({
@@ -68,6 +72,7 @@ const post = ref<Post>({
   title: '',
   nickname: '',
   views: 0,
+  commentCount: 0,
 });
 
 const fetchPost = async () => {
@@ -92,6 +97,7 @@ const setPost = ({
   memberId,
   nickname,
   views,
+  commentCount,
 }: Post) => {
   post.value.title = title;
   post.value.content = content;
@@ -99,6 +105,7 @@ const setPost = ({
   post.value.memberId = memberId;
   post.value.nickname = nickname;
   post.value.views = views;
+  post.value.commentCount = commentCount;
 };
 watch(() => props.id, fetchPost);
 
