@@ -14,6 +14,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,7 +22,6 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-//@Setter
 @NoArgsConstructor(access = PROTECTED)
 public class Member extends BaseTimeEntity {
 
@@ -38,11 +38,11 @@ public class Member extends BaseTimeEntity {
 
     private String password;
 
-    @OneToMany(mappedBy = "member", cascade = ALL)
-    private List<Post> posts;
+    @OneToMany(mappedBy = "member", cascade = ALL, orphanRemoval = true)
+    private List<Post> posts = new ArrayList<>();
 
-    @OneToMany(mappedBy = "member", cascade = ALL)
-    private List<Comment> comments;
+    @OneToMany(mappedBy = "member", cascade = ALL, orphanRemoval = true)
+    private List<Comment> comments = new ArrayList<>();
 
     @Enumerated(STRING)
     private Role role;
@@ -70,8 +70,11 @@ public class Member extends BaseTimeEntity {
         nickname = memberEditor.getNickName();
     }
 
-    public void updateFromOAuth(OAuth2Response oAuth2Response) {
-        email = oAuth2Response.getEmail();
-        name = oAuth2Response.getName();
+    public void addPost(Post post) {
+        posts.add(post);
+    }
+
+    public void addComment(Comment comment) {
+        comments.add(comment);
     }
 }
