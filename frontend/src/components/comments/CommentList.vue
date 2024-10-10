@@ -1,9 +1,8 @@
 <template>
   <ul style="padding-left: 0">
     <li v-for="item in items" :key="item.id" class="card" style="border: none">
-
       <!--부모 댓글-->
-      <div v-if="item.isParent" >
+      <div v-if="item.isParent">
         <!--수정 중인 댓글-->
         <div v-if="isEditingComment(item.id)" class="mt-2">
           <!--익명 댓글은 누구나 수정 가능-->
@@ -38,8 +37,9 @@
           <!--본인 댓글이거나 관리자-->
           <div
             v-else-if="
-            (item.memberId == props.memberId && props.memberId != '') || isAdmin
-          "
+              (item.memberId == props.memberId && props.memberId != '') ||
+              isAdmin
+            "
           >
             <CommentForm
               v-model:content="item.content"
@@ -82,9 +82,14 @@
             </h6>
             <p class="card-text mb-1">{{ item.content }}</p>
             <p class="card-text">
-              <small class="text-muted">{{ item.createdAt }}
-                <a class="text-muted" @click.prevent="toggleReply(item.id)" style="text-decoration: none;"
-                > 답글쓰기</a
+              <small class="text-muted"
+                >{{ item.createdAt }}
+                <a
+                  class="text-muted"
+                  @click.prevent="toggleReply(item.id)"
+                  style="text-decoration: none"
+                >
+                  답글쓰기</a
                 >
               </small>
             </p>
@@ -103,16 +108,16 @@
                   class="dropdown-item"
                   href="#"
                   @click.prevent="editComment(item)"
-                >수정</a
+                  >수정</a
                 >
               </li>
               <li>
                 <div
                   v-if="
-                  (item.memberId == props.memberId && props.memberId != '') ||
-                  isAdmin ||
-                  item.anonymousName != null
-                "
+                    (item.memberId == props.memberId && props.memberId != '') ||
+                    isAdmin ||
+                    item.anonymousName != null
+                  "
                 >
                   <a
                     class="dropdown-item"
@@ -120,7 +125,7 @@
                     data-bs-toggle="modal"
                     href="#"
                     @click.prevent="setSelectedComment(item)"
-                  >삭제</a
+                    >삭제</a
                   >
                 </div>
                 <div v-else>
@@ -128,7 +133,7 @@
                     class="dropdown-item"
                     href="#"
                     @click.prevent="alertNotAuthorized"
-                  >삭제</a
+                    >삭제</a
                   >
                 </div>
               </li>
@@ -138,7 +143,11 @@
         <div class="card-divider"></div>
 
         <!--대댓글 작성-->
-        <div v-if="replyStatus[item.id]" class="mt-2" style="padding-left: 20px">
+        <div
+          v-if="replyStatus[item.id]"
+          class="mt-2"
+          style="padding-left: 20px"
+        >
           <CommentForm
             v-model:content="newComment.content"
             v-model:name="newComment.anonymousName"
@@ -202,8 +211,9 @@
           <!--본인 댓글이거나 관리자-->
           <div
             v-else-if="
-            (item.memberId == props.memberId && props.memberId != '') || isAdmin
-          "
+              (item.memberId == props.memberId && props.memberId != '') ||
+              isAdmin
+            "
           >
             <CommentForm
               v-model:content="item.content"
@@ -263,16 +273,16 @@
                   class="dropdown-item"
                   href="#"
                   @click.prevent="editComment(item)"
-                >수정</a
+                  >수정</a
                 >
               </li>
               <li>
                 <div
                   v-if="
-                  (item.memberId == props.memberId && props.memberId != '') ||
-                  isAdmin ||
-                  item.anonymousName != null
-                "
+                    (item.memberId == props.memberId && props.memberId != '') ||
+                    isAdmin ||
+                    item.anonymousName != null
+                  "
                 >
                   <a
                     class="dropdown-item"
@@ -280,7 +290,7 @@
                     data-bs-toggle="modal"
                     href="#"
                     @click.prevent="setSelectedComment(item)"
-                  >삭제</a
+                    >삭제</a
                   >
                 </div>
                 <div v-else>
@@ -288,7 +298,7 @@
                     class="dropdown-item"
                     href="#"
                     @click.prevent="alertNotAuthorized"
-                  >삭제</a
+                    >삭제</a
                   >
                 </div>
               </li>
@@ -298,37 +308,36 @@
         <div class="card-divider"></div>
       </div>
 
-
       <!--대댓글-->
-<!--      <div v-if="replyStatus[item.id]">-->
-<!--        <CommentForm-->
-<!--          v-model:content="newComment.content"-->
-<!--          v-model:name="newComment.anonymousName"-->
-<!--          v-model:password="newComment.password"-->
-<!--          :isLoggedIn="isLoggedIn"-->
-<!--          @submit.prevent="replyComment(item.id)"-->
-<!--        >-->
-<!--          <template #actions>-->
-<!--            <div class="form-row justify-content-end">-->
-<!--              <button class="btn btn-primary">등록</button>-->
-<!--            </div>-->
-<!--          </template>-->
-<!--        </CommentForm>-->
-<!--        <div class="card-divider"></div>-->
-<!--      </div>-->
+      <!--      <div v-if="replyStatus[item.id]">-->
+      <!--        <CommentForm-->
+      <!--          v-model:content="newComment.content"-->
+      <!--          v-model:name="newComment.anonymousName"-->
+      <!--          v-model:password="newComment.password"-->
+      <!--          :isLoggedIn="isLoggedIn"-->
+      <!--          @submit.prevent="replyComment(item.id)"-->
+      <!--        >-->
+      <!--          <template #actions>-->
+      <!--            <div class="form-row justify-content-end">-->
+      <!--              <button class="btn btn-primary">등록</button>-->
+      <!--            </div>-->
+      <!--          </template>-->
+      <!--        </CommentForm>-->
+      <!--        <div class="card-divider"></div>-->
+      <!--      </div>-->
 
-<!--      &lt;!&ndash; 자식 댓글 리스트 &ndash;&gt;-->
-<!--      <ul-->
-<!--        v-if="item.childComments && item.childComments.length > 0"-->
-<!--        style="padding-left: 20px"-->
-<!--      >-->
-<!--        <ChildCommentList-->
-<!--          :items="item.childComments"-->
-<!--          :memberId="memberId"-->
-<!--          @edit:comment="saveEditWithParams"-->
-<!--          @delete:comment="confirmDeleteWithParams"-->
-<!--        />-->
-<!--      </ul>-->
+      <!--      &lt;!&ndash; 자식 댓글 리스트 &ndash;&gt;-->
+      <!--      <ul-->
+      <!--        v-if="item.childComments && item.childComments.length > 0"-->
+      <!--        style="padding-left: 20px"-->
+      <!--      >-->
+      <!--        <ChildCommentList-->
+      <!--          :items="item.childComments"-->
+      <!--          :memberId="memberId"-->
+      <!--          @edit:comment="saveEditWithParams"-->
+      <!--          @delete:comment="confirmDeleteWithParams"-->
+      <!--        />-->
+      <!--      </ul>-->
     </li>
   </ul>
 
@@ -387,7 +396,6 @@ import { computed, reactive, ref } from 'vue';
 import CommentForm from '@/components/comments/CommentForm.vue';
 import { useAlert } from '@/composables/useAlert';
 import { useAuthStore } from '@/stores/auth';
-import ChildCommentList from '@/components/comments/ChildCommentList.vue';
 
 const { vAlert } = useAlert();
 const authStore = useAuthStore();

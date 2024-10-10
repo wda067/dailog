@@ -359,7 +359,6 @@ const confirmDeleteAccount = () => {
   if (!confirm('계정을 삭제하시겠습니까?')) {
     return;
   }
-  console.log(profile.value.oAuth2Login);
   if (profile.value.oAuth2Login) {
     deleteOAuth2Account();
     isDeleteAccount.value = true;

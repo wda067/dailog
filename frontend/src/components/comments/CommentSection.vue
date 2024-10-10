@@ -39,7 +39,7 @@ import CommentForm from '@/components/comments/CommentForm.vue';
 import { useAlert } from '@/composables/useAlert';
 import { useAuthStore } from '@/stores/auth';
 import axiosInstance from '@/composables/useApi';
-import AppPagination from '@/components/app/AppPagination.vue'
+import AppPagination from '@/components/app/AppPagination.vue';
 
 const { vAlert, vSuccess } = useAlert();
 
@@ -106,8 +106,9 @@ const memberId = computed(() =>
 
 const fetchComment = async () => {
   try {
-    const { data } = await axios.get(`/api/posts/${props.postId}/comments`,
-      { params: params.value });
+    const { data } = await axios.get(`/api/posts/${props.postId}/comments`, {
+      params: params.value,
+    });
     comments.value = data.items;
     totalCount.value = data.totalCount;
   } catch (error) {
