@@ -11,11 +11,14 @@ import lombok.Getter;
 public class CommentCreateForMember {
 
     @NotBlank(message = "댓글을 입력해 주세요.")
-    @Size(max = 1000, message = "내용은 1000자까지 입력해 주세요.")
+    @Size(max = 1000, message = "댓글은 1,000자까지 입력해 주세요.")
     private final String content;
 
-    @JsonCreator
-    public CommentCreateForMember(String content) {
+    private final String parentId;
+
+    @Builder
+    public CommentCreateForMember(String content, String parentId) {
         this.content = content;
+        this.parentId = parentId;
     }
 }
