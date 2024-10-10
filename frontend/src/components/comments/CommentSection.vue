@@ -5,6 +5,14 @@
       :memberId="memberId"
       @edit:comment="editComment"
       @delete:comment="deleteComment"
+      @reply:comment="replyComment"
+    />
+
+    <AppPagination
+      v-if="comments.length > 0"
+      :current-page="params.page"
+      :page-count="pageCount"
+      @page="page => (params.page = page)"
     />
 
     <CommentForm
@@ -31,8 +39,18 @@ import CommentForm from '@/components/comments/CommentForm.vue';
 import { useAlert } from '@/composables/useAlert';
 import { useAuthStore } from '@/stores/auth';
 import axiosInstance from '@/composables/useApi';
+import AppPagination from '@/components/app/AppPagination.vue'
 
 const { vAlert, vSuccess } = useAlert();
+
+const totalCount = ref(0);
+const params = ref({
+  page: 1,
+  size: 10,
+});
+const pageCount = computed(() =>
+  Math.ceil(totalCount.value / params.value.size),
+);
 
 interface Comment {
   id: string;
@@ -44,6 +62,8 @@ interface Comment {
   createdAt: string;
   updatedAt: string;
   ipAddress: string;
+  childComments: Comment[];
+  isParent: boolean;
 }
 
 interface NewComment {
@@ -59,7 +79,18 @@ const props = defineProps({
   },
 });
 
+// const posts = ref(
+//   [] as Array<{
+//     id: string;
+//     title: string;
+//     createdAt: string;
+//     nickname: string;
+//     commentCount: number;
+//     views: number;
+//   }>,
+// );
 const comments = ref<Comment[]>([]);
+
 const newComment = ref<NewComment>({
   anonymousName: '',
   password: '',
@@ -75,8 +106,10 @@ const memberId = computed(() =>
 
 const fetchComment = async () => {
   try {
-    const { data } = await axios.get(`/api/posts/${props.postId}/comments`);
-    comments.value = data;
+    const { data } = await axios.get(`/api/posts/${props.postId}/comments`,
+      { params: params.value });
+    comments.value = data.items;
+    totalCount.value = data.totalCount;
   } catch (error) {
     if (axios.isAxiosError(error)) {
       const response = error.response;
@@ -88,6 +121,14 @@ const fetchComment = async () => {
     }
   }
 };
+
+watch(
+  () => params.value.page,
+  () => {
+    fetchComment();
+  },
+);
+
 watch(() => props.postId, fetchComment);
 onMounted(() => {
   fetchComment();
@@ -139,6 +180,94 @@ const addCommentByAnonymous = async () => {
       })
       .then(fetchComment);
     initForm();
+    vSuccess('댓글이 등록되었습니다.');
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const response = error.response;
+      const { validation } = response?.data || {};
+
+      if (!response) {
+        vAlert('응답을 받을 수 없습니다.');
+      }
+      if (validation.anonymousName) {
+        vAlert(validation?.anonymousName);
+      }
+      if (validation.password) {
+        vAlert(validation?.password);
+      }
+      if (validation.content) {
+        vAlert(validation?.content);
+      }
+      if (!(!(validation.title || validation.content) || validation.content)) {
+        vAlert(response?.data.message);
+      }
+    } else {
+      vAlert('댓글 작성 중 오류가 발생했습니다.');
+    }
+  }
+};
+
+const replyComment = async ({
+  parentId,
+  content,
+  password,
+  anonymousName,
+}: {
+  parentId: string;
+  content: string;
+  anonymousName: string;
+  password: string;
+}) => {
+  if (isLoggedIn.value) {
+    await replyCommentByMember(parentId, content);
+  } else {
+    await replyCommentByAnonymous(parentId, content, anonymousName, password);
+  }
+};
+
+const replyCommentByMember = async (parentId: string, content: string) => {
+  try {
+    await axiosInstance
+      .post(`/api/posts/${props.postId}/comments/member`, {
+        parentId: parentId,
+        content: content,
+      })
+      .then(fetchComment);
+    vSuccess('댓글이 등록되었습니다.');
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const response = error.response;
+      const { validation } = response?.data || {};
+
+      if (!response) {
+        vAlert('응답을 받을 수 없습니다.');
+      }
+      if (validation.content) {
+        vAlert(validation?.content);
+      } else {
+        vAlert(response?.data.message);
+      }
+    } else {
+      vAlert('댓글 작성 중 오류가 발생했습니다.');
+    }
+  }
+};
+
+const replyCommentByAnonymous = async (
+  parentId: string,
+  content: string,
+  anonymousName: string,
+  password: string,
+) => {
+  try {
+    await axios
+      .post(`/api/posts/${props.postId}/comments/anonymous`, {
+        parentId: parentId,
+        content: content,
+        anonymousName: anonymousName,
+        password: password,
+      })
+      .then(fetchComment);
     vSuccess('댓글이 등록되었습니다.');
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -226,11 +355,15 @@ const editCommentByAnonymous = async (
   }
 };
 
-const deleteComment = async (
-  id: string,
-  password: string,
-  isAnonymousComment: boolean,
-) => {
+const deleteComment = async ({
+  id,
+  password,
+  isAnonymousComment,
+}: {
+  id: string;
+  password: string;
+  isAnonymousComment: boolean;
+}) => {
   if (isAdmin.value) {
     await deleteCommentByAdmin(id);
   } else if (isLoggedIn.value && !isAnonymousComment) {

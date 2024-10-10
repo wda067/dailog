@@ -1,9 +1,11 @@
 package com.dailog.api.repository.comment;
 
 import com.dailog.api.domain.Comment;
-import java.util.List;
+import com.dailog.api.request.comment.CommentPageRequest;
+import org.springframework.data.domain.Page;
 
 public interface CommentRepositoryCustom {
 
-    List<Comment> findByPostId(Long postId);
+    Page<Comment> getList(Long postId, CommentPageRequest commentPageRequest);
+
 }

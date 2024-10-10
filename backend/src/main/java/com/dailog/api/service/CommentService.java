@@ -18,11 +18,14 @@ import com.dailog.api.request.comment.CommentCreateForMember;
 import com.dailog.api.request.comment.CommentDelete;
 import com.dailog.api.request.comment.CommentEditForAnonymous;
 import com.dailog.api.request.comment.CommentEditForMember;
+import com.dailog.api.request.comment.CommentPageRequest;
+import com.dailog.api.response.PagingResponse;
 import com.dailog.api.response.comment.CommentResponse;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,12 +47,31 @@ public class CommentService {
         Post post = postRepository.findById(postId)
                 .orElseThrow(PostNotFound::new);
 
-        Comment comment = Comment.builder()
-                .post(post)
-                .member(member)
-                .content(request.getContent())
-                .build();
+        Comment comment;
 
+        String parentCommentId = request.getParentId();
+        //부모 댓글일 경우
+        if (parentCommentId == null) {
+            comment = Comment.builder()
+                    .post(post)
+                    .member(member)
+                    .content(request.getContent())
+                    .build();
+        }
+        //대댓글일 경우
+        else {
+            Comment parentComment = commentRepository.findById(Long.parseLong(parentCommentId))
+                    .orElseThrow(CommentNotFound::new);
+            comment = Comment.builder()
+                    .post(post)
+                    .member(member)
+                    .content(request.getContent())
+                    .parentComment(parentComment)
+                    .build();
+            //parentComment.addChildComment(comment);
+        }
+
+        member.addComment(comment);
         post.addComment(comment);
     }
 
@@ -57,44 +79,107 @@ public class CommentService {
     public void writeByAnonymous(Long postId, CommentCreateForAnonymous request, String ipAddress) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(PostNotFound::new);
+        Comment comment;
 
-        Comment comment = Comment.builder()
-                .post(post)
-                .anonymousName(request.getAnonymousName())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .content(request.getContent())
-                .ipAddress(ipAddress)
-                .build();
+        String parentCommentId = request.getParentId();
+        //부모 댓글일 경우
+        if (parentCommentId == null) {
+            comment = Comment.builder()
+                    .post(post)
+                    .anonymousName(request.getAnonymousName())
+                    .password(passwordEncoder.encode(request.getPassword()))
+                    .content(request.getContent())
+                    .ipAddress(ipAddress)
+                    .build();
+        }
+        //대댓글일 경우
+        else {
+            Comment parentComment = commentRepository.findById(Long.parseLong(parentCommentId))
+                    .orElseThrow(CommentNotFound::new);
+            comment = Comment.builder()
+                    .post(post)
+                    .anonymousName(request.getAnonymousName())
+                    .password(passwordEncoder.encode(request.getPassword()))
+                    .content(request.getContent())
+                    .ipAddress(ipAddress)
+                    .parentComment(parentComment)
+                    .build();
+            //parentComment.addChildComment(comment);
+        }
 
         post.addComment(comment);
     }
 
-    public List<CommentResponse> get(Long postId) {
-        List<Comment> comments = commentRepository.findByPostId(postId);
+    public PagingResponse<CommentResponse> getList(Long postId, CommentPageRequest commentPageRequest) {
+        Page<Comment> commentPage = commentRepository.getList(postId, commentPageRequest);
 
-        return comments.stream()
-                .map(comment -> {
-                            if (comment.getMember() == null) {
-                                return CommentResponse.builder()
-                                        .id(comment.getId())
-                                        .anonymousName(comment.getAnonymousName())
-                                        .password(comment.getPassword())
-                                        .content(comment.getContent())
-                                        .createdAt(comment.getCreatedAt())
-                                        .updatedAt(comment.getUpdatedAt())
-                                        .ipAddress(comment.getIpAddress())
-                                        .build();
-                            }
-                            return CommentResponse.builder()
-                                    .id(comment.getId())
-                                    .memberId(comment.getMemberId())
-                                    .nickname(comment.getMemberNickname())
-                                    .content(comment.getContent())
-                                    .createdAt(comment.getCreatedAt())
-                                    .updatedAt(comment.getUpdatedAt())
-                                    .build();
-                        }
-                ).collect(Collectors.toList());
+        return new PagingResponse<>(commentPage, CommentResponse.class);
+    }
+
+    public List<CommentResponse> get(Long postId) {
+        List<Comment> parentComments = commentRepository.findByPostIdAndParentCommentIsNull(postId);
+
+        return parentComments.stream()
+                .map(this::convertToDto)
+                .toList();
+    }
+
+    //부모 댓글 DTO에 대댓글 DTO 리스트 추가
+    private CommentResponse convertToDto(Comment parentComment) {
+        List<CommentResponse> childComments = parentComment.getChildComments().stream()
+                .map(this::convertChildCommentToDto)
+                .toList();
+
+        if (parentComment.getMember() == null) {
+            //익명 댓글
+            return CommentResponse.builder()
+                    .id(parentComment.getId())
+                    .anonymousName(parentComment.getAnonymousName())
+                    .password(parentComment.getPassword())
+                    .content(parentComment.getContent())
+                    .createdAt(parentComment.getCreatedAt())
+                    .updatedAt(parentComment.getUpdatedAt())
+                    .ipAddress(parentComment.getIpAddress())
+                    .childComments(childComments)  //자식 댓글 포함
+                    .build();
+        }
+
+        //회원 댓글
+        return CommentResponse.builder()
+                .id(parentComment.getId())
+                .memberId(parentComment.getMemberId())
+                .nickname(parentComment.getMemberNickname())
+                .content(parentComment.getContent())
+                .createdAt(parentComment.getCreatedAt())
+                .updatedAt(parentComment.getUpdatedAt())
+                .childComments(childComments)  //자식 댓글 포함
+                .build();
+    }
+
+    //대댓글 DTO 변환
+    private CommentResponse convertChildCommentToDto(Comment childComment) {
+        //익명 댓글
+        if (childComment.getMember() == null) {
+            return CommentResponse.builder()
+                    .id(childComment.getId())
+                    .anonymousName(childComment.getAnonymousName())
+                    .password(childComment.getPassword())
+                    .content(childComment.getContent())
+                    .createdAt(childComment.getCreatedAt())
+                    .updatedAt(childComment.getUpdatedAt())
+                    .ipAddress(childComment.getIpAddress())
+                    .build();
+        }
+
+        //회원 댓글
+        return CommentResponse.builder()
+                .id(childComment.getId())
+                .memberId(childComment.getMemberId())
+                .nickname(childComment.getMemberNickname())
+                .content(childComment.getContent())
+                .createdAt(childComment.getCreatedAt())
+                .updatedAt(childComment.getUpdatedAt())
+                .build();
     }
 
     @Transactional

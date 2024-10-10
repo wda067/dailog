@@ -7,14 +7,15 @@ import com.dailog.api.request.comment.CommentCreateForMember;
 import com.dailog.api.request.comment.CommentDelete;
 import com.dailog.api.request.comment.CommentEditForAnonymous;
 import com.dailog.api.request.comment.CommentEditForMember;
+import com.dailog.api.request.comment.CommentPageRequest;
 import com.dailog.api.request.oAuth2.CustomOAuth2User;
+import com.dailog.api.response.PagingResponse;
 import com.dailog.api.response.comment.CommentResponse;
 import com.dailog.api.service.CommentService;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,10 +31,15 @@ import org.springframework.web.bind.annotation.RestController;
 public class CommentController {
 
     private final CommentService commentService;
-    
+
+    //@GetMapping("/api/posts/{postId}/comments")
+    //public List<CommentResponse> get(@PathVariable Long postId) {
+    //    return commentService.get(postId);
+    //}
+
     @GetMapping("/api/posts/{postId}/comments")
-    public List<CommentResponse> get(@PathVariable Long postId) {
-        return commentService.get(postId);
+    public PagingResponse<CommentResponse> get(@PathVariable Long postId, CommentPageRequest commentPageRequest) {
+        return commentService.getList(postId, commentPageRequest);
     }
 
     @PostMapping("/api/posts/{postId}/comments/member")
