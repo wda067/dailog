@@ -82,15 +82,16 @@
             </h6>
             <p class="card-text mb-1">{{ item.content }}</p>
             <p class="card-text">
-              <small class="text-muted"
-                >{{ item.createdAt }}
+              <small class="text-muted">
+                <span v-if="item.createdAt === item.updatedAt">{{ item.createdAt }}</span>
+                <span v-else>{{ item.updatedAt }}</span>
                 <a
                   class="text-muted"
                   @click.prevent="toggleReply(item.id)"
                   style="text-decoration: none"
                 >
-                  답글쓰기</a
-                >
+                  답글쓰기
+                </a>
               </small>
             </p>
           </div>
@@ -256,7 +257,10 @@
             </h6>
             <p class="card-text mb-1">{{ item.content }}</p>
             <p class="card-text">
-              <small class="text-muted">{{ item.createdAt }} </small>
+              <small class="text-muted">
+                <span v-if="item.createdAt === item.updatedAt">{{ item.createdAt }}</span>
+                <span v-else>{{ item.updatedAt }}</span>
+              </small>
             </p>
           </div>
 

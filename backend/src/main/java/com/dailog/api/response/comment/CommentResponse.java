@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -27,7 +26,6 @@ public class CommentResponse {
     private final String ipAddress;
     @JsonProperty("isParent")
     private final boolean isParent;
-    //private final List<CommentResponse> childComments;
 
     public CommentResponse(Comment comment) {
         this.id = comment.getId();
@@ -47,23 +45,23 @@ public class CommentResponse {
         } else {
             this.ipAddress = "";
         }
-        //this.childComments = comment.getChildComments().stream()
-        //        .map(CommentResponse::new)
-        //        .collect(Collectors.toList());
 
         this.isParent = comment.getParentComment() == null;
 
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         ZonedDateTime utcCreatedAt = comment.getCreatedAt().atZone(ZoneId.of("UTC"));
         ZonedDateTime seoulCreatedAt = utcCreatedAt.withZoneSameInstant(ZoneId.of("Asia/Seoul"));
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         this.createdAt = seoulCreatedAt.format(formatter);
-        this.updatedAt = comment.getUpdatedAt().format(formatter);
+
+        ZonedDateTime utcUpdatedAt = comment.getUpdatedAt().atZone(ZoneId.of("UTC"));
+        ZonedDateTime seoulUpdatedAt = utcUpdatedAt.withZoneSameInstant(ZoneId.of("Asia/Seoul"));
+        this.updatedAt = seoulUpdatedAt.format(formatter);
     }
 
     @Builder
     public CommentResponse(Long id, String nickname, Long memberId, String anonymousName, String password,
                            String content, LocalDateTime createdAt, LocalDateTime updatedAt, String ipAddress,
-                           List<CommentResponse> childComments, boolean isParent) {
+                           boolean isParent) {
         this.id = id;
         this.nickname = nickname;
         this.memberId = String.valueOf(memberId);
@@ -77,12 +75,14 @@ public class CommentResponse {
         } else {
             this.ipAddress = "";
         }
-        //this.childComments = childComments == null ? new ArrayList<>() : childComments;
 
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         ZonedDateTime utcCreatedAt = createdAt.atZone(ZoneId.of("UTC"));
         ZonedDateTime seoulCreatedAt = utcCreatedAt.withZoneSameInstant(ZoneId.of("Asia/Seoul"));
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         this.createdAt = seoulCreatedAt.format(formatter);
-        this.updatedAt = updatedAt.format(formatter);
+
+        ZonedDateTime utcUpdatedAt = updatedAt.atZone(ZoneId.of("UTC"));
+        ZonedDateTime seoulUpdatedAt = utcUpdatedAt.withZoneSameInstant(ZoneId.of("Asia/Seoul"));
+        this.updatedAt = seoulUpdatedAt.format(formatter);
     }
 }
