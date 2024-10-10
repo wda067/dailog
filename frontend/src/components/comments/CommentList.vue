@@ -594,8 +594,8 @@ const alertNotAuthorized = () => {
 <style scoped>
 .card-divider {
   border-bottom: 1px solid #dee2e6;
-  margin-top: 0;
-  margin-bottom: 0;
+  margin-top: 5px;
+  margin-bottom: 5px;
 }
 
 .card-body {

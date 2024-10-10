@@ -22,7 +22,7 @@
         @move-to-edit="moveToEdit"
       />
     </div>
-    <hr class="mt-1 mb-1" />
+    <hr class="mt-1 mb-4" />
 
     <CommentSection :postId="props.id" />
   </div>
