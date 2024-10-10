@@ -32,6 +32,7 @@ services:
       - redis-server --requirepass "$${REDIS_PASSWORD:?REDIS_PASSWORD variable is not set}"
     ports:
       - "6379:6379"
+    restart: always
 
   dailog-backend:
     container_name: backend
@@ -46,12 +47,12 @@ services:
     depends_on:
       - cache-server
       - dailog-mysql
-    deploy:
-      resources:
-        limits:
-          cpus: '1.5'
-          memory: 512M
-    restart: on-failure
+#    deploy:
+#      resources:
+#        limits:
+#          cpus: '1.5'
+#          memory: 512M
+    restart: always
 
   dailog-frontend:
     container_name: frontend
@@ -62,11 +63,11 @@ services:
       - 443:443
     depends_on:
       - dailog-backend
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 64M
+#    deploy:
+#      resources:
+#        limits:
+#          cpus: '0.5'
+#          memory: 64M
     restart: on-failure
 
 volumes:

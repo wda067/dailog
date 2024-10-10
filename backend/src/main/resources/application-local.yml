@@ -21,6 +21,9 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create
+    properties:
+      hibernate:
+        format_sql: true
 
 redirect:
   url: http://localhost/oauth2-jwt-header
@@ -29,3 +32,4 @@ redirect:
 logging:
   level:
     org.springframework.cache: trace
+    org.hibernate.sql: debug

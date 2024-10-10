@@ -3,7 +3,7 @@ name: MySQL Build and Push
 on:
   push:
     branches:
-      - 'feature'
+      - 'feature/**'
     paths:
       - '*.sql'
       - 'Dockerfile'
