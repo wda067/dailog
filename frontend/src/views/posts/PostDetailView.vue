@@ -1,10 +1,14 @@
 <template>
   <div>
-    <h1>{{ post.title }}</h1>
+    <h2>{{ post.title }}</h2>
     <p class="fw-bold m-0">{{ post.nickname }}</p>
-    <p class="text-muted mb-1">{{ post.createdAt }} 조회 {{ post.views }}</p>
+    <p class="mb-1">
+      <small class="text-muted">
+        {{ post.createdAt }} 조회 {{ post.views }}
+      </small>
+    </p>
     <hr class="mt-1" />
-    <p style="white-space: pre-line">{{ post.content }}</p>
+    <p style="white-space: normal">{{ post.content }}</p>
     <hr class="mt-4 mb-2" />
 
     <PostButtons
@@ -29,7 +33,7 @@ import { useAlert } from '@/composables/useAlert';
 import PostButtons from '@/components/posts/PostButtons.vue';
 import CommentSection from '@/components/comments/CommentSection.vue';
 import { useAuthStore } from '@/stores/auth';
-import axiosInstance from '@/composables/useApi'
+import axiosInstance from '@/composables/useApi';
 
 const { vAlert, vSuccess } = useAlert();
 
