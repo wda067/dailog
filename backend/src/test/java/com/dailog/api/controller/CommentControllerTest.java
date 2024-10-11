@@ -1,7 +1,10 @@
 package com.dailog.api.controller;
 
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -21,7 +24,12 @@ import com.dailog.api.request.comment.CommentCreateForAnonymous;
 import com.dailog.api.request.comment.CommentCreateForMember;
 import com.dailog.api.request.comment.CommentDelete;
 import com.dailog.api.request.comment.CommentEditForAnonymous;
+import com.dailog.api.request.post.PostCreate;
+import com.dailog.api.service.CommentService;
+import com.dailog.api.service.PostService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -54,6 +62,9 @@ class CommentControllerTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private CommentService commentService;
+
     @AfterEach
     void clean() {
         postRepository.deleteAll();
@@ -67,15 +78,11 @@ class CommentControllerTest {
     void should_SaveComment_When_LoggedIn() throws Exception {
         //given
         Member member = memberRepository.findAll().get(0);
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .member(member)
+        Post post = getPost(member);
+
+        CommentCreateForMember request = CommentCreateForMember.builder()
+                .content("댓글")
                 .build();
-
-        postRepository.save(post);
-
-        CommentCreateForMember request = new CommentCreateForMember("댓글");
         String json = objectMapper.writeValueAsString(request);
 
         // When
@@ -96,15 +103,11 @@ class CommentControllerTest {
     void should_ReturnBadRequest_When_ContentIsEmpty() throws Exception {
         //given
         Member member = memberRepository.findAll().get(0);
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .member(member)
+        Post post = getPost(member);
+
+        CommentCreateForMember request = CommentCreateForMember.builder()
+                .content("")
                 .build();
-
-        postRepository.save(post);
-
-        CommentCreateForMember request = new CommentCreateForMember("");
         String json = objectMapper.writeValueAsString(request);
 
         // When
@@ -115,22 +118,20 @@ class CommentControllerTest {
                 .andExpect(jsonPath("$.validation.content").value("댓글을 입력해 주세요."))
                 .andDo(print());
     }
+
     @Test
     @CustomMockMember
     @DisplayName("회원 잘못된 댓글 작성 - 1000자 이상의 댓글")
     void should_ReturnBadRequest_When_ContentIsTooLong() throws Exception {
         //given
         Member member = memberRepository.findAll().get(0);
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .member(member)
-                .build();
-
-        postRepository.save(post);
+        Post post = getPost(member);
 
         String longContent = "a".repeat(1001);
-        CommentCreateForMember request = new CommentCreateForMember(longContent);
+        CommentCreateForMember request = CommentCreateForMember.builder()
+                .content(longContent)
+                .build();
+
         String json = objectMapper.writeValueAsString(request);
 
         //expected
@@ -138,7 +139,7 @@ class CommentControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.validation.content").value("내용은 1000자까지 입력해 주세요."))
+                .andExpect(jsonPath("$.validation.content").value("댓글은 1,000자까지 입력해 주세요."))
                 .andDo(print());
     }
 
@@ -148,14 +149,7 @@ class CommentControllerTest {
     void should_EditComment_When_LoggedIn() throws Exception {
         //given
         Member member = memberRepository.findAll().get(0);
-
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .member(member)
-                .build();
-
-        postRepository.save(post);
+        Post post = getPost(member);
 
         Comment comment = Comment.builder()
                 .post(post)
@@ -166,7 +160,9 @@ class CommentControllerTest {
         commentRepository.save(comment);
         post.addComment(comment);
 
-        CommentCreateForMember request = new CommentCreateForMember("댓글 수정 후");
+        CommentCreateForMember request = CommentCreateForMember.builder()
+                .content("댓글 수정 후")
+                .build();
         String json = objectMapper.writeValueAsString(request);
 
         //expected
@@ -187,14 +183,7 @@ class CommentControllerTest {
     @DisplayName("회원 댓글 수정 실패 - 다른 작성자")
     void should_ReturnForbidden_When_EditingCommentByAnotherUser() throws Exception {
         //given
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .member(getMember())
-                .build();
-
-        postRepository.save(post);
-
+        Post post = getPost(getMember());
         Comment comment = Comment.builder()
                 .post(post)
                 .member(getMember())
@@ -222,12 +211,7 @@ class CommentControllerTest {
     @DisplayName("비회원 댓글 작성")
     void should_SaveAnonymousComment_When_ValidRequest() throws Exception {
         //given
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .member(getMember())
-                .build();
-        postRepository.save(post);
+        Post post = getPost(getMember());
 
         CommentCreateForAnonymous request = CommentCreateForAnonymous.builder()
                 .anonymousName("익명")
@@ -254,12 +238,7 @@ class CommentControllerTest {
     @DisplayName("비회원 잘못된 댓글 작성 - 8자 이상의 이름")
     void should_ReturnBadRequest_When_NameTooLong() throws Exception {
         //given
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .member(getMember())
-                .build();
-        postRepository.save(post);
+        Post post = getPost(getMember());
 
         CommentCreateForAnonymous request = CommentCreateForAnonymous.builder()
                 .anonymousName("8자 이상의 이름입니다.")
@@ -281,12 +260,7 @@ class CommentControllerTest {
     @DisplayName("비회원 잘못된 댓글 작성 - 유효하지 않은 비밀번호")
     void should_ReturnBadRequest_When_InvalidPassword() throws Exception {
         //given
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .member(getMember())
-                .build();
-        postRepository.save(post);
+        Post post = getPost(getMember());
 
         CommentCreateForAnonymous request = CommentCreateForAnonymous.builder()
                 .anonymousName("익명")
@@ -308,12 +282,7 @@ class CommentControllerTest {
     @DisplayName("비회원 댓글 수정")
     void should_EditAnonymousComment_When_ValidRequest() throws Exception {
         //given
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .member(getMember())
-                .build();
-        postRepository.save(post);
+        Post post = getPost(getMember());
 
         String encryptedPassword = passwordEncoder.encode("1234");
         Comment comment = Comment.builder()
@@ -349,12 +318,7 @@ class CommentControllerTest {
     @DisplayName("비회원 댓글 수정 실패 - 다른 비밀번호")
     void should_FailToEditAnonymousComment_When_WrongPassword() throws Exception {
         //given
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .member(getMember())
-                .build();
-        postRepository.save(post);
+        Post post = getPost(getMember());
 
         String encryptedPassword = passwordEncoder.encode("1234");
         Comment comment = Comment.builder()
@@ -386,12 +350,7 @@ class CommentControllerTest {
     @DisplayName("관리자 댓글 삭제")
     void should_DeleteCommentByAdmin_When_Authorized() throws Exception {
         //given
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .member(getMember())
-                .build();
-        postRepository.save(post);
+        Post post = getPost(getMember());
 
         String encryptedPassword = passwordEncoder.encode("1234");
         Comment comment = Comment.builder()
@@ -416,12 +375,7 @@ class CommentControllerTest {
     void should_DeleteMemberComment_When_Authorized() throws Exception {
         //given
         Member member = memberRepository.findAll().get(0);
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .member(member)
-                .build();
-        postRepository.save(post);
+        Post post = getPost(member);
 
         Comment comment = Comment.builder()
                 .post(post)
@@ -444,12 +398,7 @@ class CommentControllerTest {
     void should_ReturnForbidden_When_Unauthorized() throws Exception {
         //given
         Member another = getMember();
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .member(another)
-                .build();
-        postRepository.save(post);
+        Post post = getPost(another);
 
         Comment comment = Comment.builder()
                 .post(post)
@@ -471,12 +420,7 @@ class CommentControllerTest {
     @DisplayName("익명 댓글 삭제")
     void should_DeleteAnonymousComment_When_ValidRequest() throws Exception {
         //given
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .member(getMember())
-                .build();
-        postRepository.save(post);
+        Post post = getPost(getMember());
 
         String encryptedPassword = passwordEncoder.encode("1234");
         Comment comment = Comment.builder()
@@ -502,12 +446,7 @@ class CommentControllerTest {
     @DisplayName("익명 댓글 삭제 실패 - 틀린 비밀번호")
     void should_FailToDeleteAnonymousComment_When_WrongPassword() throws Exception {
         //given
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .member(getMember())
-                .build();
-        postRepository.save(post);
+        Post post = getPost(getMember());
 
         String encryptedPassword = passwordEncoder.encode("1234");
         Comment comment = Comment.builder()
@@ -521,12 +460,44 @@ class CommentControllerTest {
 
         CommentDelete commentDelete = new CommentDelete("");
         String json = objectMapper.writeValueAsString(commentDelete);
+
         //expected
         mockMvc.perform(post("/api/comments/{commentId}/delete/anonymous", comment.getId())
                         .content(json)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.message").value("댓글 비밀번호가 잘못 되었습니다."))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("댓글 목록 조회")
+    void should_GetPosts_When_ValidRequest() throws Exception {
+        //given
+        Member member = getMember();
+        Post post = getPost(member);
+
+        CommentCreateForMember request = CommentCreateForMember.builder()
+                .content("댓글")
+                .build();
+        commentService.writeByMember(post.getId(), request, member.getEmail());
+        Comment parentComment = commentRepository.findAll().get(0);
+
+        for (int i = 1; i < 21; i++) {
+            CommentCreateForMember replyRequest = CommentCreateForMember.builder()
+                    .content(i + "번째 대댓글")
+                    .parentId(String.valueOf(parentComment.getId()))
+                    .build();
+            commentService.writeByMember(post.getId(), replyRequest, member.getEmail());
+        }
+
+        //expected
+        mockMvc.perform(get("/api/posts/{postId}/comments?page=1&size=20", post.getId())
+                        .contentType(APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items.length()", is(20)))
+                .andExpect(jsonPath("$.items.[0].content").value("댓글"))
+                .andExpect(jsonPath("$.items.[19].content").value("19번째 대댓글"))
                 .andDo(print());
     }
 
@@ -539,5 +510,15 @@ class CommentControllerTest {
                 .build();
         memberRepository.save(member);
         return member;
+    }
+
+    private Post getPost(Member member) {
+        Post post = Post.builder()
+                .title("제목")
+                .content("내용")
+                .member(member)
+                .build();
+        postRepository.save(post);
+        return post;
     }
 }

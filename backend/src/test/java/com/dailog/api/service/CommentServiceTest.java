@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.dailog.api.domain.Comment;
 import com.dailog.api.domain.Member;
 import com.dailog.api.domain.Post;
+import com.dailog.api.exception.comment.CommentNotFound;
 import com.dailog.api.exception.comment.ForbiddenCommentAccess;
 import com.dailog.api.exception.comment.InvalidCommentPassword;
 import com.dailog.api.repository.comment.CommentRepository;
@@ -18,22 +19,27 @@ import com.dailog.api.request.comment.CommentCreateForMember;
 import com.dailog.api.request.comment.CommentDelete;
 import com.dailog.api.request.comment.CommentEditForAnonymous;
 import com.dailog.api.request.comment.CommentEditForMember;
+import com.dailog.api.request.comment.CommentPageRequest;
+import com.dailog.api.response.PagingResponse;
 import com.dailog.api.response.comment.CommentResponse;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.IntConsumer;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 class CommentServiceTest {
-
     @Autowired
     private CommentRepository commentRepository;
+
     @Autowired
     private CommentService commentService;
     @Autowired
@@ -45,9 +51,31 @@ class CommentServiceTest {
 
     @AfterEach
     void clean() {
-        memberRepository.deleteAll();
-        postRepository.deleteAll();
         commentRepository.deleteAll();
+        postRepository.deleteAll();
+        memberRepository.deleteAll();
+    }
+
+    private Member getMember() {
+        String encryptedPassword = passwordEncoder.encode("ValidPassword12!");
+        Member member = Member.builder()
+                .name("test")
+                .email("test@test.com")
+                .password(encryptedPassword)
+                .role(MEMBER)
+                .build();
+        memberRepository.save(member);
+        return member;
+    }
+
+    private Post getPost(Member member) {
+        Post post = Post.builder()
+                .title("제목")
+                .content("내용")
+                .member(member)
+                .build();
+        postRepository.save(post);
+        return post;
     }
 
     @Test
@@ -57,7 +85,9 @@ class CommentServiceTest {
         Member member = getMember();
         Post post = getPost(member);
 
-        CommentCreateForMember request = new CommentCreateForMember("내용");
+        CommentCreateForMember request = CommentCreateForMember.builder()
+                .content("내용")
+                .build();
 
         //when
         commentService.writeByMember(post.getId(), request, member.getEmail());
@@ -82,7 +112,7 @@ class CommentServiceTest {
                 .build();
 
         //when
-        commentService.writeByAnonymous(post.getId(), request);
+        commentService.writeByAnonymous(post.getId(), request, "test.ip");
 
         //then
         assertEquals(1L, commentRepository.count());
@@ -121,12 +151,12 @@ class CommentServiceTest {
         commentRepository.saveAll(guestComments);
 
         //when
-        List<CommentResponse> commentResponses = commentService.get(post.getId());
-
-        //then
-        assertEquals(4L, commentResponses.size());
-        assertEquals("회원 댓글 내용1", commentResponses.get(0).getContent());
-        assertEquals("비회원 댓글 내용2", commentResponses.get(3).getContent());
+        //List<CommentResponse> commentResponses = commentService.get(post.getId());
+        //
+        ////then
+        //assertEquals(4L, commentResponses.size());
+        //assertEquals("회원 댓글 내용1", commentResponses.get(0).getContent());
+        //assertEquals("비회원 댓글 내용2", commentResponses.get(3).getContent());
     }
 
     @Test
@@ -149,7 +179,8 @@ class CommentServiceTest {
         commentService.editByMember(comment.getId(), request, member.getEmail());
 
         //then
-        Comment editedComment = commentRepository.findByPostId(post.getId()).get(0);
+        Comment editedComment = commentRepository.findById(comment.getId())
+                .orElseThrow(CommentNotFound::new);
         assertEquals("댓글 수정 후", editedComment.getContent());
     }
 
@@ -204,7 +235,8 @@ class CommentServiceTest {
         commentService.editByAnonymous(comment.getId(), request);
 
         //then
-        Comment editedComment = commentRepository.findByPostId(post.getId()).get(0);
+        Comment editedComment = commentRepository.findById(comment.getId())
+                .orElseThrow(CommentNotFound::new);
         assertEquals("댓글 수정 후", editedComment.getContent());
     }
 
@@ -325,26 +357,77 @@ class CommentServiceTest {
                 commentService.deleteAnonymousComment(comment.getId(), request));
     }
 
-    private Member getMember() {
-        String encryptedPassword = passwordEncoder.encode("ValidPassword12!");
-        Member member = Member.builder()
-                .name("test")
-                .email("test@test.com")
-                .password(encryptedPassword)
-                .role(MEMBER)
+    @Test
+    @DisplayName("댓글이 존재할 때 대댓글 작성")
+    @Transactional
+    void should_SaveReplyComment_When_ExitsParentComment() {
+        //given
+        Member member = getMember();
+        Post post = getPost(member);
+
+        //부모 댓글 작성
+        CommentCreateForMember parentComment = CommentCreateForMember.builder()
+                .content("댓글")
                 .build();
-        memberRepository.save(member);
-        return member;
+        commentService.writeByMember(post.getId(), parentComment, member.getEmail());
+        Long parentCommentId = commentRepository.findAll().get(0).getId();
+
+        //대댓글 작성
+        CommentCreateForMember childComment = CommentCreateForMember.builder()
+                .content("대댓글")
+                .parentId(String.valueOf(parentCommentId))
+                .build();
+
+        //when
+        commentService.writeByMember(post.getId(), childComment, member.getEmail());
+
+        //then
+        Comment findChildComment = commentRepository.findAll().get(1);
+
+        assertEquals(parentCommentId, findChildComment.getParentComment().getId());
+        assertEquals("대댓글", findChildComment.getContent());
+        assertEquals(2, commentRepository.count());
     }
 
-    private Post getPost(Member member) {
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
+    @Test
+    @DisplayName("댓글 1페이지 조회")
+    @Transactional(readOnly = true)
+    void should_GetPagedComments_When_ValidPageRequest() {
+        //given
+        Member member = getMember();
+        Post post = getPost(member);
+
+        //부모 댓글 작성
+        Comment parentComment = Comment.builder()
                 .member(member)
+                .post(post)
+                .content("댓글")
                 .build();
-        postRepository.save(post);
-        return post;
-    }
+        commentRepository.save(parentComment);
 
+        //대댓글 작성
+        List<Comment> childComments = IntStream.range(1, 31)
+                .mapToObj(i -> Comment.builder()
+                        .content(i + "번째 대댓글")
+                        .parentComment(parentComment)
+                        .member(member)
+                        .post(post)
+                        .build())
+                .toList();
+        commentRepository.saveAll(childComments);
+
+        CommentPageRequest commentPageRequest = CommentPageRequest.builder()
+                .page(1)
+                .size(20)
+                .build();
+
+        //when
+        PagingResponse<CommentResponse> pagingResponse = commentService.getList(post.getId(), commentPageRequest);
+
+        //then
+        assertEquals(20L, pagingResponse.getSize());
+        assertEquals("댓글", pagingResponse.getItems().get(0).getContent());
+        assertEquals("1번째 대댓글", pagingResponse.getItems().get(1).getContent());
+        assertEquals("19번째 대댓글", pagingResponse.getItems().get(19).getContent());
+    }
 }

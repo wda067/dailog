@@ -185,7 +185,7 @@ class PostControllerTest {
 
     @Test
     @CustomMockMember
-    @DisplayName("게시글 여러 개 조회")
+    @DisplayName("게시글 목록 조회")
     void should_GetPosts_When_ValidRequest() throws Exception {
         //given
         Member member = memberRepository.findAll().get(0);

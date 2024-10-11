@@ -6,9 +6,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.dailog.api.domain.Comment;
 import com.dailog.api.domain.Member;
 import com.dailog.api.domain.Post;
 import com.dailog.api.exception.post.PostNotFound;
+import com.dailog.api.repository.comment.CommentRepository;
 import com.dailog.api.repository.member.MemberRepository;
 import com.dailog.api.repository.post.PostRepository;
 import com.dailog.api.request.post.PostCreate;
@@ -16,6 +18,7 @@ import com.dailog.api.request.post.PostEdit;
 import com.dailog.api.request.post.PostPageRequest;
 import com.dailog.api.request.post.PostSearch;
 import com.dailog.api.response.PagingResponse;
+import com.dailog.api.response.post.PostIdResponse;
 import com.dailog.api.response.post.PostResponse;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -30,9 +33,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 class PostServiceTest {
-
     @Autowired
     private PostService postService;
+
     @Autowired
     private PostRepository postRepository;
     @Autowired
@@ -41,11 +44,25 @@ class PostServiceTest {
     private MemberRepository memberRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private CommentRepository commentRepository;
 
     @BeforeEach
     void clean() {
         postRepository.deleteAll();
         memberRepository.deleteAll();
+    }
+
+    private Member getMember() {
+        String encryptedPassword = passwordEncoder.encode("ValidPassword12!");
+        Member member = Member.builder()
+                .name("test")
+                .email("test@test.com")
+                .password(encryptedPassword)
+                .role(MEMBER)
+                .build();
+        memberRepository.save(member);
+        return member;
     }
 
     @Test
@@ -466,10 +483,11 @@ class PostServiceTest {
         postRepository.saveAll(posts);
 
         //when
-        Post post = postRepository.findPrevPost(posts.get(9).getId())
-                .orElseThrow(PostNotFound::new);
+        PostIdResponse prevPostId = postService.getPrevPostId(posts.get(9).getId());
 
         //then
+        Post post = postRepository.findById(prevPostId.getId())
+                .orElseThrow(PostNotFound::new);
         assertEquals(posts.get(8).getId(), post.getId());
         assertEquals("제목 9", post.getTitle());
     }
@@ -489,10 +507,11 @@ class PostServiceTest {
         postRepository.saveAll(posts);
 
         //when
-        Post post = postRepository.findNextPost(posts.get(0).getId())
-                .orElseThrow(PostNotFound::new);
+        PostIdResponse nextPostId = postService.getNextPostId(posts.get(0).getId());
 
         //then
+        Post post = postRepository.findById(nextPostId.getId())
+                .orElseThrow(PostNotFound::new);
         assertEquals(posts.get(1).getId(), post.getId());
         assertEquals("제목 2", post.getTitle());
     }
@@ -517,7 +536,7 @@ class PostServiceTest {
 
         //expected
         assertThrows(PostNotFound.class, () ->
-                postService.getPrevPost(first.getId()));
+                postService.getPrevPostId(first.getId()));
     }
 
     @Test
@@ -540,68 +559,87 @@ class PostServiceTest {
 
         //expected
         assertThrows(PostNotFound.class, () ->
-                postService.getNextPost(second.getId()));
+                postService.getNextPostId(second.getId()));
     }
 
     @Test
-    @Transactional
     @DisplayName("이전 게시물이 삭제가 되면 그 이전 게시물을 조회")
     void should_GetPreviousPost_When_PrevPostIsDeleted() {
         //given
+        Member member = getMember();
         List<Post> posts = IntStream.range(1, 11)
                 .mapToObj(i -> Post.builder()
                         .title("제목 " + i)
                         .content("내용")
+                        .member(member)
                         .build())
                 .toList();
 
         postRepository.saveAll(posts);
 
         //when
-        postRepository.delete(posts.get(8));
-
-        Post post = postRepository.findPrevPost(posts.get(9).getId())
-                .orElseThrow(PostNotFound::new);
+        postService.delete(posts.get(8).getId(), member.getEmail());
 
         //then
+        Post post = postRepository.findPrevPost(posts.get(9).getId())
+                .orElseThrow(PostNotFound::new);
         assertEquals(posts.get(7).getId(), post.getId());
         assertEquals("제목 8", post.getTitle());
     }
 
     @Test
-    @Transactional
     @DisplayName("다음 게시물이 삭제가 되면 그 다음 게시물을 조회")
     void should_GetNextPost_When_NextPostIsDeleted() {
         //given
+        Member member = getMember();
         List<Post> posts = IntStream.range(1, 11)
                 .mapToObj(i -> Post.builder()
                         .title("제목 " + i)
                         .content("내용")
+                        .member(member)
                         .build())
                 .toList();
 
         postRepository.saveAll(posts);
 
         //when
-        postRepository.delete(posts.get(1));  //제목 2
-
-        Post post = postRepository.findNextPost(posts.get(0).getId())
-                .orElseThrow(PostNotFound::new);
+        postService.delete(posts.get(1).getId(), member.getEmail());
 
         //then
+        Post post = postRepository.findNextPost(posts.get(0).getId())
+                .orElseThrow(PostNotFound::new);
         assertEquals(posts.get(2).getId(), post.getId());
         assertEquals("제목 3", post.getTitle());
     }
 
-    private Member getMember() {
-        String encryptedPassword = passwordEncoder.encode("ValidPassword12!");
-        Member member = Member.builder()
-                .name("test")
-                .email("test@test.com")
-                .password(encryptedPassword)
-                .role(MEMBER)
+    @Test
+    @DisplayName("게시글 삭제 시 댓글도 삭제된다.")
+    void should_DeleteComments_When_DeletePost() {
+        //given
+        Member member = getMember();
+        Post post = Post.builder()
+                .title("제목")
+                .content("내용")
+                .member(member)
                 .build();
-        memberRepository.save(member);
-        return member;
+        postRepository.save(post);
+
+        IntStream.range(0, 10)
+                .forEach(i -> {
+                            Comment comment = Comment.builder()
+                                    .content("댓글")
+                                    .post(post)
+                                    .member(member)
+                                    .build();
+                            commentRepository.save(comment);
+                        }
+                );
+
+        //when
+        postService.delete(post.getId(), member.getEmail());
+
+        //then
+        List<Comment> comments = commentRepository.findAll();
+        assertEquals(0, comments.size());
     }
 }
