@@ -61,9 +61,6 @@ public class Comment extends BaseEntity {
     @JoinColumn(name = "parent_id")
     private Comment parentComment;
 
-    @OneToMany(mappedBy = "parentComment", cascade = ALL, orphanRemoval = true)
-    private List<Comment> childComments = new ArrayList<>();
-
     @Builder
     public Comment(Member member, String anonymousName, String password, String content, Post post, String ipAddress,
                    Comment parentComment) {
@@ -92,9 +89,5 @@ public class Comment extends BaseEntity {
 
     public String getMemberNickname() {
         return this.member.getNickname();
-    }
-
-    public void addChildComment(Comment childComment) {
-        childComments.add(childComment);
     }
 }

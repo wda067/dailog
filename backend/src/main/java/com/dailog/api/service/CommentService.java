@@ -22,7 +22,6 @@ import com.dailog.api.request.comment.CommentPageRequest;
 import com.dailog.api.response.PagingResponse;
 import com.dailog.api.response.comment.CommentResponse;
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -46,7 +45,6 @@ public class CommentService {
                 .orElseThrow(MemberNotFound::new);
         Post post = postRepository.findById(postId)
                 .orElseThrow(PostNotFound::new);
-
         Comment comment;
 
         String parentCommentId = request.getParentId();
@@ -104,7 +102,6 @@ public class CommentService {
                     .ipAddress(ipAddress)
                     .parentComment(parentComment)
                     .build();
-            //parentComment.addChildComment(comment);
         }
 
         post.addComment(comment);
@@ -114,72 +111,6 @@ public class CommentService {
         Page<Comment> commentPage = commentRepository.getList(postId, commentPageRequest);
 
         return new PagingResponse<>(commentPage, CommentResponse.class);
-    }
-
-    public List<CommentResponse> get(Long postId) {
-        List<Comment> parentComments = commentRepository.findByPostIdAndParentCommentIsNull(postId);
-
-        return parentComments.stream()
-                .map(this::convertToDto)
-                .toList();
-    }
-
-    //부모 댓글 DTO에 대댓글 DTO 리스트 추가
-    private CommentResponse convertToDto(Comment parentComment) {
-        List<CommentResponse> childComments = parentComment.getChildComments().stream()
-                .map(this::convertChildCommentToDto)
-                .toList();
-
-        if (parentComment.getMember() == null) {
-            //익명 댓글
-            return CommentResponse.builder()
-                    .id(parentComment.getId())
-                    .anonymousName(parentComment.getAnonymousName())
-                    .password(parentComment.getPassword())
-                    .content(parentComment.getContent())
-                    .createdAt(parentComment.getCreatedAt())
-                    .updatedAt(parentComment.getUpdatedAt())
-                    .ipAddress(parentComment.getIpAddress())
-                    .childComments(childComments)  //자식 댓글 포함
-                    .build();
-        }
-
-        //회원 댓글
-        return CommentResponse.builder()
-                .id(parentComment.getId())
-                .memberId(parentComment.getMemberId())
-                .nickname(parentComment.getMemberNickname())
-                .content(parentComment.getContent())
-                .createdAt(parentComment.getCreatedAt())
-                .updatedAt(parentComment.getUpdatedAt())
-                .childComments(childComments)  //자식 댓글 포함
-                .build();
-    }
-
-    //대댓글 DTO 변환
-    private CommentResponse convertChildCommentToDto(Comment childComment) {
-        //익명 댓글
-        if (childComment.getMember() == null) {
-            return CommentResponse.builder()
-                    .id(childComment.getId())
-                    .anonymousName(childComment.getAnonymousName())
-                    .password(childComment.getPassword())
-                    .content(childComment.getContent())
-                    .createdAt(childComment.getCreatedAt())
-                    .updatedAt(childComment.getUpdatedAt())
-                    .ipAddress(childComment.getIpAddress())
-                    .build();
-        }
-
-        //회원 댓글
-        return CommentResponse.builder()
-                .id(childComment.getId())
-                .memberId(childComment.getMemberId())
-                .nickname(childComment.getMemberNickname())
-                .content(childComment.getContent())
-                .createdAt(childComment.getCreatedAt())
-                .updatedAt(childComment.getUpdatedAt())
-                .build();
     }
 
     @Transactional

@@ -73,9 +73,9 @@ spring:
 #    hibernate:
 #      ddl-auto: create-drop
 
-logging:
-  level:
-    sql: debug
+#logging:
+#  level:
+#    sql: debug
 
 jwt:
   jwt-key: Eaw/+23wN4UmcIYXGHleHIYGbsgOqiH0wISX3kfSrXA=
