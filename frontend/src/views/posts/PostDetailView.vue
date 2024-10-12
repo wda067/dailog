@@ -17,11 +17,13 @@
       <PostButtons
         :hasAuthorized="hasAuthorized"
         :postId="props.id"
+        :isAdmin="isAdmin"
         @remove="remove"
         @move-to-prev="moveToPrev"
         @move-to-next="moveToNext"
         @move-to-list="moveToList"
         @move-to-edit="moveToEdit"
+        @remove:admin="removeByAdmin"
       />
     </div>
     <hr class="mt-1 mb-4" />
@@ -53,6 +55,7 @@ const currentUserId = computed(() => profile.value?.id);
 const hasAuthorized = computed(
   () => post.value.memberId === currentUserId.value,
 );
+const isAdmin = computed(() => authStore.user.role === 'ADMIN');
 
 const props = defineProps({
   id: {
@@ -123,6 +126,31 @@ const remove = async () => {
       return;
     }
     await axios.delete(`/api/posts/${props.id}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('access')}`,
+      },
+    });
+    router
+      .push({ name: 'PostList' })
+      .then(() => vSuccess('게시글이 삭제되었습니다.'));
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const data = error.response?.data;
+      if (data) {
+        vAlert(data.message);
+      } else {
+        vAlert('게시글을 삭제하는데 실패했습니다.');
+      }
+    }
+  }
+};
+
+const removeByAdmin = async () => {
+  try {
+    if (!confirm('게시글을 삭제하시겠습니까?')) {
+      return;
+    }
+    await axios.delete(`/api/admin/posts/${props.id}`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('access')}`,
       },

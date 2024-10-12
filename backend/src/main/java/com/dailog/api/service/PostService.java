@@ -4,6 +4,8 @@ import com.dailog.api.domain.Member;
 import com.dailog.api.domain.Post;
 import com.dailog.api.domain.PostEditor;
 import com.dailog.api.domain.PostEditor.PostEditorBuilder;
+import com.dailog.api.domain.enums.Role;
+import com.dailog.api.exception.auth.Unauthorized;
 import com.dailog.api.exception.member.MemberNotFound;
 import com.dailog.api.exception.post.ForbiddenPostAccess;
 import com.dailog.api.exception.post.PostNotFound;
@@ -184,6 +186,20 @@ public class PostService {
         validateWriter(memberId, email);
 
         postRepository.delete(post);
+    }
+
+    public void deleteByAdmin(Long postId, String email) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(PostNotFound::new);
+
+        Member admin = memberRepository.findByEmail(email)
+                .orElseThrow(MemberNotFound::new);
+        boolean isAdmin = admin.getRole().toString().equals("ADMIN");
+        if (isAdmin) {
+            postRepository.delete(post);
+        } else {
+            throw new ForbiddenPostAccess();
+        }
     }
 
     private void validateWriter(Long memberId, String email) {

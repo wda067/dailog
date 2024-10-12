@@ -20,9 +20,14 @@
         수정
       </button>
     </div>
-    <div v-if="hasAuthorized" class="col-auto">
+    <div v-if="hasAuthorized && !isAdmin" class="col-auto">
       <button class="btn btn-outline-danger" @click="$emit('remove')">
         삭제
+      </button>
+    </div>
+    <div v-if="isAdmin" class="col-auto">
+      <button class="btn btn-outline-danger" @click="$emit('remove:admin')">
+        삭제(관리자용)
       </button>
     </div>
   </div>
@@ -38,6 +43,10 @@ defineProps({
     type: Boolean,
     required: true,
   },
+  isAdmin: {
+    type: Boolean,
+    required: true,
+  }
 });
 </script>
 

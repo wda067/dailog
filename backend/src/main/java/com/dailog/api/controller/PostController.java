@@ -91,6 +91,15 @@ public class PostController {
         }
     }
 
+    @DeleteMapping("/api/admin/posts/{postId}")
+    public void deleteByAdmin(@PathVariable Long postId,
+                       @AuthenticationPrincipal Object principal) {
+        String username = getUsernameFromPrincipal(principal);
+        if (username != null) {
+            postService.deleteByAdmin(postId, username);
+        }
+    }
+
     @GetMapping("/api/posts/{postId}")
     public PostResponse get(@PathVariable Long postId, HttpServletRequest request) {
         postService.viewPost(postId, request);
