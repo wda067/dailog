@@ -10,6 +10,7 @@ import com.dailog.api.request.comment.CommentEditForMember;
 import com.dailog.api.request.comment.CommentPageRequest;
 import com.dailog.api.request.oAuth2.CustomOAuth2User;
 import com.dailog.api.response.PagingResponse;
+import com.dailog.api.response.comment.CommentIdResponse;
 import com.dailog.api.response.comment.CommentResponse;
 import com.dailog.api.service.CommentService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -37,37 +38,41 @@ public class CommentController {
     }
 
     @PostMapping("/api/posts/{postId}/comments/member")
-    public void writeByMember(@PathVariable Long postId,
-                              @RequestBody @Validated CommentCreateForMember request,
-                              @AuthenticationPrincipal Object principal) {
+    public CommentIdResponse writeByMember(@PathVariable Long postId,
+                                           @RequestBody @Validated CommentCreateForMember request,
+                                           @AuthenticationPrincipal Object principal) {
         String username = getUsernameFromPrincipal(principal);
         if (username != null) {
-            commentService.writeByMember(postId, request, username);
+            return commentService.writeByMember(postId, request, username);
+        } else {
+            throw new Unauthorized();
         }
     }
 
     @PostMapping("/api/posts/{postId}/comments/anonymous")
-    public void writeByAnonymous(@PathVariable Long postId,
-                                 @RequestBody @Validated CommentCreateForAnonymous create,
-                                 HttpServletRequest request) {
-        commentService.writeByAnonymous(postId, create, request.getRemoteAddr());
+    public CommentIdResponse writeByAnonymous(@PathVariable Long postId,
+                                              @RequestBody @Validated CommentCreateForAnonymous create,
+                                              HttpServletRequest request) {
+        return commentService.writeByAnonymous(postId, create, request.getRemoteAddr());
     }
 
     //@PreAuthorize("hasRole('ROLE_MEMBER')")
     @PatchMapping("/api/comments/{commentId}/member")
-    public void editByMember(@PathVariable Long commentId,
-                             @RequestBody @Validated CommentEditForMember request,
-                             @AuthenticationPrincipal Object principal) {
+    public CommentIdResponse editByMember(@PathVariable Long commentId,
+                                          @RequestBody @Validated CommentEditForMember request,
+                                          @AuthenticationPrincipal Object principal) {
         String username = getUsernameFromPrincipal(principal);
         if (username != null) {
-            commentService.editByMember(commentId, request, username);
+            return commentService.editByMember(commentId, request, username);
+        } else {
+            throw new Unauthorized();
         }
     }
 
     @PatchMapping("/api/comments/{commentId}/anonymous")
-    public void editMyAnonymous(@PathVariable Long commentId,
+    public CommentIdResponse editMyAnonymous(@PathVariable Long commentId,
                                 @RequestBody @Validated CommentEditForAnonymous request) {
-        commentService.editByAnonymous(commentId, request);
+        return commentService.editByAnonymous(commentId, request);
     }
 
     //@DeleteMapping은 Body 요청 X

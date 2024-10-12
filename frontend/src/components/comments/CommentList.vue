@@ -70,7 +70,8 @@
         </div>
 
         <!--수정 중이 아닌 댓글-->
-        <div v-else class="d-flex justify-content-between">
+        <div v-else class="d-flex justify-content-between p-0"
+             :class="{ 'highlight': addedCommentId == item.id }">
           <div class="card-body py-1">
             <h6 class="card-title">
               <strong v-if="item.anonymousName == null">
@@ -245,7 +246,8 @@
         </div>
 
         <!--수정 중이 아닌 댓글-->
-        <div v-else class="d-flex justify-content-between">
+        <div v-else class="d-flex justify-content-between"
+             :class="{ 'highlight': addedCommentId == item.id }">
           <div class="card-body py-1">
             <h6 class="card-title">
               <strong v-if="item.anonymousName == null">
@@ -437,6 +439,7 @@ interface Comment {
 const props = defineProps<{
   items: Comment[];
   memberId: string;
+  addedCommentId: string;
 }>();
 
 const emits = defineEmits(['delete:comment', 'edit:comment', 'reply:comment']);
@@ -469,15 +472,6 @@ const editPassword = ref('');
 const isAnonymousComment = ref(false);
 const hasReply = ref(false);
 const parentId = ref('');
-
-const openReply = (id: string) => {
-  hasReply.value = !hasReply.value;
-  parentId.value = id;
-};
-
-const isAuthor = (item: Comment) => {
-  return item.memberId == props.memberId && props.memberId != '';
-};
 
 const getCommenterName = (item: Comment) => {
   return item.memberId ? item.nickname : item.anonymousName;
@@ -552,33 +546,6 @@ const confirmDeleteComment = () => {
   selectedCommentId.value = '';
 };
 
-// interface DeleteCommentParams {
-//   id: string;
-//   password: string;
-//   isAnonymousComment: boolean;
-// }
-
-// const confirmDeleteWithParams = (params: DeleteCommentParams) => {
-//   console.log('confirmDeleteWithParams');
-//   console.log(selectedCommentId.value);
-//   console.log(params.id);
-//   if (params.id == '') {
-//     emits('delete:comment', {
-//       id: selectedCommentId.value,
-//       password: deletePassword.value,
-//       isAnonymousComment: isAnonymousComment.value,
-//     });
-//   } else {
-//     emits('delete:comment', {
-//       id: params.id,
-//       password: params.password,
-//       isAnonymousComment: params.isAnonymousComment,
-//     });
-//   }
-//   deletePassword.value = '';
-//   selectedCommentId.value = '';
-// };
-
 const replyComment = (parentId: string) => {
   emits('reply:comment', {
     password: newComment.value.password,
@@ -598,12 +565,12 @@ const alertNotAuthorized = () => {
 <style scoped>
 .card-divider {
   border-bottom: 1px solid #dee2e6;
-  margin-top: 5px;
-  margin-bottom: 5px;
 }
 
 .card-body {
   padding-left: 0;
+  margin-top: 5px;
+  margin-bottom: 5px;
 }
 
 .dropdown-menu {
@@ -615,5 +582,9 @@ const alertNotAuthorized = () => {
   display: inline-block;
   width: auto;
   padding: 0.25rem 0.5rem;
+}
+
+.highlight {
+  background-color: #f0f0f0;
 }
 </style>

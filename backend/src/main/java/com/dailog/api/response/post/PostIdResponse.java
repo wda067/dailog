@@ -1,6 +1,5 @@
 package com.dailog.api.response.post;
 
-import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 
 @Getter

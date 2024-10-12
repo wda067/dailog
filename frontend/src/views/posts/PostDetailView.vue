@@ -24,7 +24,10 @@
     </div>
     <hr class="mt-1 mb-4" />
 
-    <CommentSection :postId="props.id" />
+    <CommentSection
+      :postId="props.id"
+      :commentCount="post.commentCount"
+      @comment:changed="fetchPost" />
   </div>
 </template>
 
@@ -107,7 +110,8 @@ const setPost = ({
   post.value.views = views;
   post.value.commentCount = commentCount;
 };
-watch(() => props.id, fetchPost);
+
+watch([() => props.id, () => post.value.commentCount], fetchPost);
 
 //Button
 const remove = async () => {

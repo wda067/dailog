@@ -20,6 +20,7 @@ import com.dailog.api.request.comment.CommentEditForAnonymous;
 import com.dailog.api.request.comment.CommentEditForMember;
 import com.dailog.api.request.comment.CommentPageRequest;
 import com.dailog.api.response.PagingResponse;
+import com.dailog.api.response.comment.CommentIdResponse;
 import com.dailog.api.response.comment.CommentResponse;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +41,7 @@ public class CommentService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public void writeByMember(Long postId, CommentCreateForMember request, String email) {
+    public CommentIdResponse writeByMember(Long postId, CommentCreateForMember request, String email) {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(MemberNotFound::new);
         Post post = postRepository.findById(postId)
@@ -66,15 +67,16 @@ public class CommentService {
                     .content(request.getContent())
                     .parentComment(parentComment)
                     .build();
-            //parentComment.addChildComment(comment);
         }
 
+        commentRepository.save(comment);
         member.addComment(comment);
         post.addComment(comment);
+        return new CommentIdResponse(comment.getId());
     }
 
     @Transactional
-    public void writeByAnonymous(Long postId, CommentCreateForAnonymous request, String ipAddress) {
+    public CommentIdResponse writeByAnonymous(Long postId, CommentCreateForAnonymous request, String ipAddress) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(PostNotFound::new);
         Comment comment;
@@ -104,7 +106,9 @@ public class CommentService {
                     .build();
         }
 
+        commentRepository.save(comment);
         post.addComment(comment);
+        return new CommentIdResponse(comment.getId());
     }
 
     public PagingResponse<CommentResponse> getList(Long postId, CommentPageRequest commentPageRequest) {
@@ -114,7 +118,7 @@ public class CommentService {
     }
 
     @Transactional
-    public void editByMember(Long commentId, CommentEditForMember request, String email) {
+    public CommentIdResponse editByMember(Long commentId, CommentEditForMember request, String email) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(CommentNotFound::new);
 
@@ -127,10 +131,11 @@ public class CommentService {
         }
         CommentEditor commentEditor = commentEditorBuilder.build();
         comment.edit(commentEditor);
+        return new CommentIdResponse(comment.getId());
     }
 
     @Transactional
-    public void editByAnonymous(Long commentId, CommentEditForAnonymous request) {
+    public CommentIdResponse editByAnonymous(Long commentId, CommentEditForAnonymous request) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(CommentNotFound::new);
         validatePassword(request.getPassword(), comment);
@@ -141,6 +146,7 @@ public class CommentService {
         }
         CommentEditor commentEditor = commentEditorBuilder.build();
         comment.edit(commentEditor);
+        return new CommentIdResponse(comment.getId());
     }
 
     public void deleteCommentByAdmin(Long commentId) {
