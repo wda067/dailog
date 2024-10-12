@@ -1,5 +1,6 @@
 package com.dailog.api.service;
 
+import static com.dailog.api.domain.enums.Role.ADMIN;
 import static com.dailog.api.domain.enums.Role.MEMBER;
 import static java.time.LocalDateTime.now;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -9,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import com.dailog.api.domain.Comment;
 import com.dailog.api.domain.Member;
 import com.dailog.api.domain.Post;
+import com.dailog.api.exception.post.ForbiddenPostAccess;
 import com.dailog.api.exception.post.PostNotFound;
 import com.dailog.api.repository.comment.CommentRepository;
 import com.dailog.api.repository.member.MemberRepository;
@@ -56,10 +58,22 @@ class PostServiceTest {
     private Member getMember() {
         String encryptedPassword = passwordEncoder.encode("ValidPassword12!");
         Member member = Member.builder()
-                .name("test")
-                .email("test@test.com")
+                .name("member")
+                .email("member@test.com")
                 .password(encryptedPassword)
                 .role(MEMBER)
+                .build();
+        memberRepository.save(member);
+        return member;
+    }
+
+    private Member getAdmin() {
+        String encryptedPassword = passwordEncoder.encode("ValidPassword12!");
+        Member member = Member.builder()
+                .name("admin")
+                .email("admin@test.com")
+                .password(encryptedPassword)
+                .role(ADMIN)
                 .build();
         memberRepository.save(member);
         return member;
@@ -641,5 +655,46 @@ class PostServiceTest {
         //then
         List<Comment> comments = commentRepository.findAll();
         assertEquals(0, comments.size());
+    }
+
+    @Test
+    @DisplayName("관리자는 모든 게시글을 삭제할 수 있다.")
+    void should_DeletePost_When_Admin() {
+        //given
+        Member member = getMember();
+        Member admin = getAdmin();
+
+        Post post = Post.builder()
+                .title("제목")
+                .content("내용")
+                .member(member)
+                .build();
+        postRepository.save(post);
+
+        //when
+        postService.deleteByAdmin(post.getId(), admin.getEmail());
+
+        //then
+        assertEquals(0, postRepository.count());
+    }
+
+    @Test
+    @DisplayName("관리자가 아니라면 다른 게시글을 삭제할 수 없다.")
+    void should_NotDeletePost_When_NotAdmin() {
+        //given
+        Member member = getMember();
+        Member admin = getAdmin();
+
+        Post post = Post.builder()
+                .title("제목")
+                .content("내용")
+                .member(admin)
+                .build();
+        postRepository.save(post);
+
+        //expected
+        assertThrows(ForbiddenPostAccess.class, () ->
+                postService.deleteByAdmin(post.getId(), member.getEmail()));
+        assertEquals(1L, postRepository.count());
     }
 }

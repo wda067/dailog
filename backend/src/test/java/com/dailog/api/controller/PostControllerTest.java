@@ -1,5 +1,6 @@
 package com.dailog.api.controller;
 
+import static com.dailog.api.domain.enums.Role.MEMBER;
 import static java.time.LocalDateTime.now;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -274,7 +275,7 @@ class PostControllerTest {
                 .email("new@test.com")
                 .name("new")
                 .nickname("new")
-                .role(Role.MEMBER)
+                .role(MEMBER)
                 .build();
         memberRepository.save(newMember);
 
@@ -329,7 +330,7 @@ class PostControllerTest {
                 .email("new@test.com")
                 .name("new")
                 .nickname("new")
-                .role(Role.MEMBER)
+                .role(MEMBER)
                 .build();
         memberRepository.save(newMember);
 
@@ -755,5 +756,64 @@ class PostControllerTest {
                 .orElseThrow(PostNotFound::new);
         Integer views = (Integer) redisTemplate.opsForValue().get("post:views:" + findPost.getId());
         assertEquals(userCount, views);
+    }
+
+    @Test
+    @DisplayName("관리자는 모든 게시글을 삭제할 수 있다.")
+    @CustomMockAdmin
+    void should_DeletePost_When_Admin() throws Exception {
+        //given
+        Member member = Member.builder()
+                .name("test")
+                .email("test@test.com")
+                .password("1234")
+                .role(MEMBER)
+                .build();
+        memberRepository.save(member);
+
+        Post post = Post.builder()
+                .member(member)
+                .title("제목")
+                .content("내용")
+                .build();
+        postRepository.save(post);
+
+        //expected
+        mockMvc.perform(delete("/api/admin/posts/{postId}", post.getId())
+                        .contentType(APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andDo(print());
+
+        assertEquals(0, postRepository.count());
+    }
+
+    @Test
+    @DisplayName("관리자가 아니라면 다른 게시글을 삭제할 수 없다.")
+    @CustomMockMember
+    void should_NotDeletePost_When_NotAdmin() throws Exception {
+        //given
+        Member member = Member.builder()
+                .name("test")
+                .email("test@test.com")
+                .password("1234")
+                .role(MEMBER)
+                .build();
+        memberRepository.save(member);
+
+        Post post = Post.builder()
+                .member(member)
+                .title("제목")
+                .content("내용")
+                .build();
+        postRepository.save(post);
+
+        //expected
+        mockMvc.perform(delete("/api/admin/posts/{postId}", post.getId())
+                        .contentType(APPLICATION_JSON))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("접근할 수 없습니다."))
+                .andDo(print());
+
+        assertEquals(1, postRepository.count());
     }
 }
