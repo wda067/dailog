@@ -9,8 +9,10 @@ import lombok.Getter;
 import org.hibernate.validator.constraints.Length;
 
 /**
- * (?=.*[a-z]) : 최소 하나의 소문자 포함 (?=.*[A-Z]) : 최소 하나의 대문자 포함 (?=.*\\d) : 최소 하나의 숫자 포함 (?=.*[@$!%*?&]) : 최소 하나의 특수문자 포함
- * [A-Za-z\\d@$!%*?&]{8,} : 허용된 문자 집합으로 8자 이상
+ * ^(?=.*[A-Za-z]) : 최소 하나의 영문 포함
+ * (?=.*\\d) : 최소 하나의 숫자 포함
+ * (?=.*[@$!%*?&]) : 최소 하나의 특수문자 포함
+ * [A-Za-z\\d@$!%*?&]{8,16} : 허용된 문자 집합으로 8자 이상 16자 이하
  */
 @Getter
 @Builder
@@ -21,7 +23,7 @@ public class Join {
     private String email;
 
     @Pattern(
-            regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,16}$",
+            regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,16}$",
             message = "유효하지 않은 비밀번호입니다."
     )
     private String password;

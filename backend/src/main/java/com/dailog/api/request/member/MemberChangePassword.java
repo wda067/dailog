@@ -13,7 +13,7 @@ public class MemberChangePassword {
 
     //@NotBlank(message = "새로운 비밀번호를 입력해 주세요.")
     @Pattern(
-            regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,16}$",
+            regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,16}$",
             message = "유효하지 않은 비밀번호입니다."
     )
     private final String newPassword;
