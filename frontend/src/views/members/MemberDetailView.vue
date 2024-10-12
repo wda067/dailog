@@ -15,17 +15,15 @@
     </div>
     <hr class="thin-hr" />
 
-    <Transition name="slide">
-      <div v-if="true" class="flex-row">
-        <label class="form-label fixed-width">별명</label>
-        <label class="form-label fixed-width">{{ profile.nickname }}</label>
-        <a
-          class="btn btn-outline-dark ms-auto"
-          @click.prevent="openModal('nickname')"
-          >별명 변경</a
-        >
-      </div>
-    </Transition>
+    <div class="flex-row">
+      <label class="form-label fixed-width">별명</label>
+      <label class="form-label fixed-width">{{ profile.nickname }}</label>
+      <a
+        class="btn btn-outline-dark ms-auto"
+        @click.prevent="openModal('nickname')"
+      >별명 변경</a
+      >
+    </div>
     <hr class="thin-hr" />
 
     <div class="flex-row">
@@ -34,17 +32,13 @@
     </div>
     <hr class="thin-hr" />
 
-    <div v-if="!profile.oAuth2Login">
-      <Transition name="slide">
-        <div class="flex-row">
-          <label class="form-label fixed-width">비밀번호</label>
-          <a class="btn btn-outline-dark" @click.prevent="openModal('password')"
-            >비밀번호 변경</a
-          >
-        </div>
-      </Transition>
-      <hr class="thin-hr" />
+    <div v-if="!profile.oAuth2Login" class="flex-row">
+      <label class="form-label fixed-width">비밀번호</label>
+      <a class="btn btn-outline-dark" @click.prevent="openModal('password')"
+      >비밀번호 변경</a
+      >
     </div>
+    <hr v-if="!profile.oAuth2Login" class="thin-hr" />
 
     <div class="flex-row">
       <label class="form-label fixed-width">등급</label>
@@ -78,7 +72,7 @@
           <hr class="mt-2" />
           <div v-if="isChangePassword || isDeleteAccount" class="modal-body">
             <label class="form-label" for="currentPassword"
-              >현재 비밀번호</label
+            >현재 비밀번호</label
             >
             <div class="position-relative mb-1">
               <input
@@ -93,8 +87,7 @@
             </div>
             <div v-if="!isChangePassword">
               <small style="color: GrayText">
-                * 비밀번호는 8~16자의 영문 대/소문자, 숫자, 특수문자를 사용해
-                주세요.
+                * 비밀번호는 8~16자의 영문, 숫자, 특수문자를 사용해 주세요.
               </small>
             </div>
             <div v-if="currentError" class="text-danger mb-1">
@@ -103,7 +96,7 @@
 
             <div v-if="isChangePassword">
               <label class="form-label" for="newPassword"
-                >새로운 비밀번호</label
+              >새로운 비밀번호</label
               >
               <div class="position-relative mb-1">
                 <input
@@ -127,7 +120,7 @@
               </div>
 
               <label class="form-label" for="confirmNewPassword"
-                >새로운 비밀번호 확인</label
+              >새로운 비밀번호 확인</label
               >
               <div class="position-relative mb-1">
                 <input
@@ -254,7 +247,7 @@ const profile = ref<Member>({
   nickname: '',
   createdAt: '',
   role: '',
-  oAuth2Login: false,
+  oAuth2Login: false
 });
 
 const currentPassword = ref('');
@@ -303,7 +296,7 @@ const changePassword = async () => {
     await axiosInstance.patch(`/api/members/${memberId}/password`, {
       currentPassword: currentPassword.value,
       newPassword: newPassword.value,
-      confirmPassword: confirmPassword.value,
+      confirmPassword: confirmPassword.value
     });
     await fetchProfile(memberId);
     vSuccess('비밀번호가 성공적으로 변경되었습니다.');
@@ -332,7 +325,7 @@ const changeNickname = async () => {
   const memberId = Array.isArray(props.id) ? props.id[0] : props.id;
   try {
     await axiosInstance.patch(`/api/members/${memberId}/nickname`, {
-      newNickname: newNickname.value,
+      newNickname: newNickname.value
     });
     await fetchProfile(memberId);
     await authStore.getUserInfo();
@@ -389,7 +382,7 @@ const deleteAccount = async () => {
   try {
     const memberId = Array.isArray(props.id) ? props.id[0] : props.id;
     await axiosInstance.post(`/api/auth/${memberId}/leave`, {
-      password: currentPassword.value,
+      password: currentPassword.value
     });
     closeModal();
     authStore.cleanToken();
@@ -444,16 +437,14 @@ onBeforeRouteUpdate((to, from, next) => {
   background: white;
   padding: 20px;
   border-radius: 8px;
-  transition:
-    transform 0.3s ease-out,
-    opacity 0.3s ease-out;
+  transition: transform 0.3s ease-out,
+  opacity 0.3s ease-out;
 }
 
 .slide-enter-active,
 .slide-leave-active {
-  transition:
-    transform 0.3s ease-out,
-    opacity 0.3s ease-out;
+  transition: transform 0.3s ease-out,
+  opacity 0.3s ease-out;
 }
 
 .slide-enter-from,

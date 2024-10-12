@@ -70,8 +70,11 @@
         </div>
 
         <!--수정 중이 아닌 댓글-->
-        <div v-else class="d-flex justify-content-between p-0"
-             :class="{ 'highlight': addedCommentId == item.id }">
+        <div
+          v-else
+          class="d-flex justify-content-between p-0"
+          :class="{ highlight: addedCommentId == item.id }"
+        >
           <div class="card-body py-1">
             <h6 class="card-title">
               <strong v-if="item.anonymousName == null">
@@ -84,7 +87,9 @@
             <p class="card-text mb-1">{{ item.content }}</p>
             <p class="card-text">
               <small class="text-muted">
-                <span v-if="item.createdAt === item.updatedAt">{{ item.createdAt }}</span>
+                <span v-if="item.createdAt === item.updatedAt">{{
+                  item.createdAt
+                }}</span>
                 <span v-else>{{ item.updatedAt }}</span>
                 <a
                   class="text-muted"
@@ -246,8 +251,11 @@
         </div>
 
         <!--수정 중이 아닌 댓글-->
-        <div v-else class="d-flex justify-content-between"
-             :class="{ 'highlight': addedCommentId == item.id }">
+        <div
+          v-else
+          class="d-flex justify-content-between"
+          :class="{ highlight: addedCommentId == item.id }"
+        >
           <div class="card-body py-1">
             <h6 class="card-title">
               <strong v-if="item.anonymousName == null">
@@ -260,7 +268,9 @@
             <p class="card-text mb-1">{{ item.content }}</p>
             <p class="card-text">
               <small class="text-muted">
-                <span v-if="item.createdAt === item.updatedAt">{{ item.createdAt }}</span>
+                <span v-if="item.createdAt === item.updatedAt">{{
+                  item.createdAt
+                }}</span>
                 <span v-else>{{ item.updatedAt }}</span>
               </small>
             </p>
@@ -313,37 +323,6 @@
         </div>
         <div class="card-divider"></div>
       </div>
-
-      <!--대댓글-->
-      <!--      <div v-if="replyStatus[item.id]">-->
-      <!--        <CommentForm-->
-      <!--          v-model:content="newComment.content"-->
-      <!--          v-model:name="newComment.anonymousName"-->
-      <!--          v-model:password="newComment.password"-->
-      <!--          :isLoggedIn="isLoggedIn"-->
-      <!--          @submit.prevent="replyComment(item.id)"-->
-      <!--        >-->
-      <!--          <template #actions>-->
-      <!--            <div class="form-row justify-content-end">-->
-      <!--              <button class="btn btn-primary">등록</button>-->
-      <!--            </div>-->
-      <!--          </template>-->
-      <!--        </CommentForm>-->
-      <!--        <div class="card-divider"></div>-->
-      <!--      </div>-->
-
-      <!--      &lt;!&ndash; 자식 댓글 리스트 &ndash;&gt;-->
-      <!--      <ul-->
-      <!--        v-if="item.childComments && item.childComments.length > 0"-->
-      <!--        style="padding-left: 20px"-->
-      <!--      >-->
-      <!--        <ChildCommentList-->
-      <!--          :items="item.childComments"-->
-      <!--          :memberId="memberId"-->
-      <!--          @edit:comment="saveEditWithParams"-->
-      <!--          @delete:comment="confirmDeleteWithParams"-->
-      <!--        />-->
-      <!--      </ul>-->
     </li>
   </ul>
 
@@ -470,8 +449,6 @@ const editingCommentId = ref('');
 const editContent = ref('');
 const editPassword = ref('');
 const isAnonymousComment = ref(false);
-const hasReply = ref(false);
-const parentId = ref('');
 
 const getCommenterName = (item: Comment) => {
   return item.memberId ? item.nickname : item.anonymousName;
@@ -515,23 +492,6 @@ const saveEdit = (commentId: string) => {
     password: editPassword.value,
     content: editContent.value,
     isAnonymousComment: isAnonymousComment.value,
-  });
-  cancelEdit();
-};
-
-interface CommentParams {
-  id: string;
-  password: string;
-  content: string;
-  isAnonymousComment: boolean;
-}
-
-const saveEditWithParams = (params: CommentParams) => {
-  emits('edit:comment', {
-    id: params.id,
-    password: params.password,
-    content: params.content,
-    isAnonymousComment: params.isAnonymousComment,
   });
   cancelEdit();
 };

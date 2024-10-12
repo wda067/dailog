@@ -11,7 +11,9 @@
     <p style="white-space: normal">{{ post.content }}</p>
 
     <div class="d-flex justify-content-between align-items-center">
-      <p class="mb-0">댓글 <strong>{{ post.commentCount }}</strong></p>
+      <p class="mb-0">
+        댓글 <strong>{{ post.commentCount }}</strong>
+      </p>
       <PostButtons
         :hasAuthorized="hasAuthorized"
         :postId="props.id"
@@ -27,7 +29,8 @@
     <CommentSection
       :postId="props.id"
       :commentCount="post.commentCount"
-      @comment:changed="fetchPost" />
+      @comment:changed="fetchPost"
+    />
   </div>
 </template>
 

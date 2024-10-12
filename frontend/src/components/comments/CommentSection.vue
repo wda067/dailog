@@ -47,10 +47,10 @@ const emits = defineEmits(['comment:changed']);
 const totalCount = ref(0);
 const params = ref({
   page: 1,
-  size: 15
+  size: 15,
 });
 const pageCount = computed(() =>
-  Math.ceil(totalCount.value / params.value.size)
+  Math.ceil(totalCount.value / params.value.size),
 );
 
 interface Comment {
@@ -76,12 +76,12 @@ interface NewComment {
 const props = defineProps({
   postId: {
     type: String,
-    required: true
+    required: true,
   },
   commentCount: {
     type: Number,
-    required: true
-  }
+    required: true,
+  },
 });
 
 const comments = ref<Comment[]>([]);
@@ -89,21 +89,21 @@ const comments = ref<Comment[]>([]);
 const newComment = ref<NewComment>({
   anonymousName: '',
   password: '',
-  content: ''
+  content: '',
 });
 
 const authStore = useAuthStore();
 const isLoggedIn = computed(() => authStore.isLoggedIn);
 const isAdmin = computed(() => authStore.user?.role === 'ADMIN');
 const memberId = computed(() =>
-  authStore.user?.id ? String(authStore.user?.id) : ''
+  authStore.user?.id ? String(authStore.user?.id) : '',
 );
 const addedCommentId = ref('');
 
 const fetchComment = async () => {
   try {
     const { data } = await axios.get(`/api/posts/${props.postId}/comments`, {
-      params: params.value
+      params: params.value,
     });
     comments.value = data.items;
     totalCount.value = data.totalCount;
@@ -123,7 +123,7 @@ watch(
   () => params.value.page,
   () => {
     fetchComment();
-  }
+  },
 );
 
 watch(() => props.postId, fetchComment);
@@ -147,10 +147,12 @@ const addComment = async () => {
 
 const addCommentByMember = async () => {
   try {
-    const { data } = await axiosInstance
-      .post(`/api/posts/${props.postId}/comments/member`, {
-        content: newComment.value.content
-      });
+    const { data } = await axiosInstance.post(
+      `/api/posts/${props.postId}/comments/member`,
+      {
+        content: newComment.value.content,
+      },
+    );
     addedCommentId.value = data.id;
     await fetchComment();
     initForm();
@@ -176,12 +178,14 @@ const addCommentByMember = async () => {
 
 const addCommentByAnonymous = async () => {
   try {
-    const { data } = await axios
-      .post(`/api/posts/${props.postId}/comments/anonymous`, {
+    const { data } = await axios.post(
+      `/api/posts/${props.postId}/comments/anonymous`,
+      {
         anonymousName: newComment.value.anonymousName,
         password: newComment.value.password,
-        content: newComment.value.content
-      })
+        content: newComment.value.content,
+      },
+    );
     addedCommentId.value = data.id;
     await fetchComment();
     initForm();
@@ -213,17 +217,19 @@ const addCommentByAnonymous = async () => {
 };
 
 const replyComment = async ({
-                              parentId,
-                              content,
-                              password,
-                              anonymousName
-                            }: {
+  parentId,
+  content,
+  password,
+  anonymousName,
+}: {
   parentId: string;
   content: string;
   anonymousName: string;
   password: string;
 }) => {
-  const parentCommentIndex = comments.value.findIndex(comment => comment.id === parentId);
+  const parentCommentIndex = comments.value.findIndex(
+    comment => comment.id === parentId,
+  );
 
   let prevChildCommentCount = 0;
   for (let i = parentCommentIndex + 1; i < comments.value.length; i++) {
@@ -245,7 +251,10 @@ const replyComment = async ({
 
   const prevTotalCount = parentCommentIndex + prevChildCommentCount;
   const nextTotalCount = parentCommentIndex + nextChildCommentCount;
-  if ((prevTotalCount == nextTotalCount) && nextTotalCount + 1 == params.value.size) {
+  if (
+    prevTotalCount == nextTotalCount &&
+    nextTotalCount + 1 == params.value.size
+  ) {
     params.value.page++;
   }
   emits('comment:changed');
@@ -253,11 +262,13 @@ const replyComment = async ({
 
 const replyCommentByMember = async (parentId: string, content: string) => {
   try {
-    const { data } = await axiosInstance
-      .post(`/api/posts/${props.postId}/comments/member`, {
+    const { data } = await axiosInstance.post(
+      `/api/posts/${props.postId}/comments/member`,
+      {
         parentId: parentId,
-        content: content
-      });
+        content: content,
+      },
+    );
     addedCommentId.value = data.id;
     await fetchComment();
     vSuccess('댓글이 등록되었습니다.');
@@ -284,16 +295,18 @@ const replyCommentByAnonymous = async (
   parentId: string,
   content: string,
   anonymousName: string,
-  password: string
+  password: string,
 ) => {
   try {
-    const { data } = await axios
-      .post(`/api/posts/${props.postId}/comments/anonymous`, {
+    const { data } = await axios.post(
+      `/api/posts/${props.postId}/comments/anonymous`,
+      {
         parentId: parentId,
         content: content,
         anonymousName: anonymousName,
-        password: password
-      });
+        password: password,
+      },
+    );
     addedCommentId.value = data.id;
     await fetchComment();
     vSuccess('댓글이 등록되었습니다.');
@@ -324,11 +337,11 @@ const replyCommentByAnonymous = async (
 };
 
 const editComment = async ({
-                             id,
-                             password,
-                             content,
-                             isAnonymousComment
-                           }: {
+  id,
+  password,
+  content,
+  isAnonymousComment,
+}: {
   id: string;
   password: string;
   content: string;
@@ -344,12 +357,12 @@ const editComment = async ({
 
 const editCommentByMember = async (id: string, content: string) => {
   try {
-    const { data } = await axiosInstance
-      .patch(`/api/comments/${id}/member`, {
-        content: content
-      });
+    const { data } = await axiosInstance.patch(`/api/comments/${id}/member`, {
+      content: content,
+    });
     addedCommentId.value = data.id;
-    await fetchComment();    vSuccess('댓글이 수정되었습니다.');
+    await fetchComment();
+    vSuccess('댓글이 수정되었습니다.');
   } catch (error) {
     if (axios.isAxiosError(error)) {
       const response = error.response;
@@ -363,16 +376,16 @@ const editCommentByMember = async (id: string, content: string) => {
 const editCommentByAnonymous = async (
   id: string,
   password: string,
-  content: string
+  content: string,
 ) => {
   try {
-    const { data } = await axios
-      .patch(`/api/comments/${id}/anonymous`, {
-        password: password,
-        content: content
-      });
+    const { data } = await axios.patch(`/api/comments/${id}/anonymous`, {
+      password: password,
+      content: content,
+    });
     addedCommentId.value = data.id;
-    await fetchComment();    vSuccess('댓글이 수정되었습니다.');
+    await fetchComment();
+    vSuccess('댓글이 수정되었습니다.');
   } catch (error) {
     if (axios.isAxiosError(error)) {
       const response = error.response;
@@ -384,10 +397,10 @@ const editCommentByAnonymous = async (
 };
 
 const deleteComment = async ({
-                               id,
-                               password,
-                               isAnonymousComment
-                             }: {
+  id,
+  password,
+  isAnonymousComment,
+}: {
   id: string;
   password: string;
   isAnonymousComment: boolean;
@@ -441,7 +454,7 @@ const deleteAnonymousComment = async (commentId: string, password: string) => {
   try {
     await axios
       .post(`/api/comments/${commentId}/delete/anonymous`, {
-        password: password
+        password: password,
       })
       .then(fetchComment);
     vSuccess('댓글이 삭제되었습니다.');
