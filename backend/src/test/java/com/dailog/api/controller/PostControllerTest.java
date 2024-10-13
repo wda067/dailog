@@ -202,7 +202,7 @@ class PostControllerTest {
         postRepository.saveAll(requestPosts);
 
         //expected
-        mockMvc.perform(get("/api/posts?page=1&size=10")
+        mockMvc.perform(get("/api/posts?page=1&size=10&searchDateType=&searchType=titleOrContent&searchQuery=")
                         .contentType(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items.length()", is(10)))
@@ -229,7 +229,7 @@ class PostControllerTest {
         postRepository.saveAll(requestPosts);
 
         //expected
-        mockMvc.perform(get("/api/posts?page=0&size=10")
+        mockMvc.perform(get("/api/posts?page=0&size=10&searchDateType=&searchType=titleOrContent&searchQuery=")
                         .contentType(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items.length()", is(10)))
@@ -561,9 +561,7 @@ class PostControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items.length()", is(2)))
                 .andExpect(jsonPath("$.items.[0].title").value("1달 전 제목"))
-                .andExpect(jsonPath("$.items.[0].content").value("1달 전 내용"))
                 .andExpect(jsonPath("$.items.[1].title").value("1일 전 제목"))
-                .andExpect(jsonPath("$.items.[1].content").value("1일 전 내용"))
                 .andDo(print());
     }
 

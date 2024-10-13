@@ -12,6 +12,7 @@ import com.dailog.api.domain.Member;
 import com.dailog.api.domain.Post;
 import com.dailog.api.exception.post.ForbiddenPostAccess;
 import com.dailog.api.exception.post.PostNotFound;
+import com.dailog.api.repository.LikesRepository;
 import com.dailog.api.repository.comment.CommentRepository;
 import com.dailog.api.repository.member.MemberRepository;
 import com.dailog.api.repository.post.PostRepository;
@@ -20,8 +21,9 @@ import com.dailog.api.request.post.PostEdit;
 import com.dailog.api.request.post.PostPageRequest;
 import com.dailog.api.request.post.PostSearch;
 import com.dailog.api.response.PagingResponse;
+import com.dailog.api.response.post.PostDetailResponse;
 import com.dailog.api.response.post.PostIdResponse;
-import com.dailog.api.response.post.PostResponse;
+import com.dailog.api.response.post.PostListResponse;
 import java.util.List;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,9 +37,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 class PostServiceTest {
+
     @Autowired
     private PostService postService;
-
     @Autowired
     private PostRepository postRepository;
     @Autowired
@@ -45,12 +47,15 @@ class PostServiceTest {
     @Autowired
     private MemberRepository memberRepository;
     @Autowired
+    private LikesRepository likesRepository;
+    @Autowired
     private PasswordEncoder passwordEncoder;
     @Autowired
     private CommentRepository commentRepository;
 
     @BeforeEach
     void clean() {
+        likesRepository.deleteAll();
         postRepository.deleteAll();
         memberRepository.deleteAll();
     }
@@ -115,7 +120,7 @@ class PostServiceTest {
         postRepository.save(post);
 
         //when
-        PostResponse savedPost = postService.get(post.getId());
+        PostDetailResponse savedPost = postService.get(post.getId());
 
         //then
         assertNotNull(savedPost);
@@ -144,8 +149,10 @@ class PostServiceTest {
                 .size(10)
                 .build();
 
+        PostSearch postSearch = new PostSearch();
+
         //when
-        PagingResponse<PostResponse> pagingResponse = postService.getList(postPageRequest);
+        PagingResponse<PostListResponse> pagingResponse = postService.getList(postSearch, postPageRequest);
 
         //then
         assertEquals(10L, pagingResponse.getSize());
@@ -315,11 +322,11 @@ class PostServiceTest {
         PostPageRequest postPageRequest = PostPageRequest.builder().build();
 
         //when
-        PagingResponse<PostResponse> response = postService.getList(postSearch, postPageRequest);
+        PagingResponse<PostListResponse> response = postService.getList(postSearch, postPageRequest);
 
         //then
         assertEquals(1L, response.getItems().size());
-        assertEquals("내용 10", response.getItems().get(0).getContent());
+        //assertEquals("내용 10", response.getItems().get(0).getContent());
     }
 
     @Test
@@ -345,7 +352,7 @@ class PostServiceTest {
         PostPageRequest postPageRequest = PostPageRequest.builder().build();
 
         //when
-        PagingResponse<PostResponse> response = postService.getList(postSearch, postPageRequest);
+        PagingResponse<PostListResponse> response = postService.getList(postSearch, postPageRequest);
 
         //then
         assertEquals(10L, response.getItems().size());
@@ -375,18 +382,18 @@ class PostServiceTest {
         PostPageRequest postPageRequest = PostPageRequest.builder().build();
 
         //when
-        PagingResponse<PostResponse> response = postService.getList(postSearch, postPageRequest);
+        PagingResponse<PostListResponse> response = postService.getList(postSearch, postPageRequest);
 
         //then
         assertEquals(1L, response.getItems().size());
         assertEquals("제목 10", response.getItems().get(0).getTitle());
-        assertEquals("내용 10", response.getItems().get(0).getContent());
+        //assertEquals("내용 10", response.getItems().get(0).getContent());
     }
 
     @Test
     @Transactional
     @DisplayName("게시글 일주일 전까지 조회")
-    void should_GetPostsFromLastWeek_When_ValidRequest() throws Exception {
+    void should_GetPostsFromLastWeek_When_ValidRequest() {
         //given
         Member member = getMember();
 
@@ -424,18 +431,18 @@ class PostServiceTest {
         PostPageRequest postPageRequest = PostPageRequest.builder().build();
 
         //when
-        PagingResponse<PostResponse> response = postService.getList(sevenDaysAgo, postPageRequest);
+        PagingResponse<PostListResponse> response = postService.getList(sevenDaysAgo, postPageRequest);
 
         //then
         assertEquals(1L, response.getItems().size());
         assertEquals("1일 전 제목", response.getItems().get(0).getTitle());
-        assertEquals("1일 전 내용", response.getItems().get(0).getContent());
+        //assertEquals("1일 전 내용", response.getItems().get(0).getContent());
     }
 
     @Test
     @Transactional
     @DisplayName("게시글 6달 전까지 조회")
-    void should_GetPostsFromLastSixMonths_When_ValidRequest() throws Exception {
+    void should_GetPostsFromLastSixMonths_When_ValidRequest() {
         //given
         Member member = getMember();
         Post oneDayAgoPost = Post.builder()
@@ -472,14 +479,14 @@ class PostServiceTest {
         PostPageRequest postPageRequest = PostPageRequest.builder().build();
 
         //when
-        PagingResponse<PostResponse> response = postService.getList(sixMonthAgo, postPageRequest);
+        PagingResponse<PostListResponse> response = postService.getList(sixMonthAgo, postPageRequest);
 
         //then
         assertEquals(2L, response.getItems().size());
         assertEquals("1달 전 제목", response.getItems().get(0).getTitle());
-        assertEquals("1달 전 내용", response.getItems().get(0).getContent());
+        //assertEquals("1달 전 내용", response.getItems().get(0).getContent());
         assertEquals("1일 전 제목", response.getItems().get(1).getTitle());
-        assertEquals("1일 전 내용", response.getItems().get(1).getContent());
+        //assertEquals("1일 전 내용", response.getItems().get(1).getContent());
     }
 
     @Test

@@ -12,6 +12,7 @@ import com.dailog.api.exception.member.InvalidMemberPassword;
 import com.dailog.api.exception.member.InvalidNickname;
 import com.dailog.api.exception.member.InvalidPasswordConfirm;
 import com.dailog.api.exception.member.MemberNotFound;
+import com.dailog.api.repository.LikesRepository;
 import com.dailog.api.repository.member.MemberRepository;
 import com.dailog.api.request.Join;
 import com.dailog.api.request.Leave;
@@ -39,18 +40,18 @@ import org.springframework.transaction.annotation.Transactional;
 @SpringBootTest
 class MemberServiceTest {
 
-    private static final Logger log = LoggerFactory.getLogger(MemberServiceTest.class);
     @Autowired
     private MemberService memberService;
-
     @Autowired
     private MemberRepository memberRepository;
-
+    @Autowired
+    private LikesRepository likesRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
 
     @BeforeEach
     void clean() {
+        likesRepository.deleteAll();
         memberRepository.deleteAll();
     }
 

@@ -41,6 +41,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -699,9 +700,11 @@ class MemberControllerTest {
     @Test
     @DisplayName("별명 변경 성공")
     @CustomMockMember
+    @Transactional
     void changeNickname_Success() throws Exception {
         //given
-        Member member = memberRepository.findAll().iterator().next();
+        Member member = memberRepository.findByEmail("member@test.com")
+                .orElseThrow(MemberNotFound::new);
 
         MemberChangeNickname newNickname = new MemberChangeNickname("8자 별명");
         String json = objectMapper.writeValueAsString(newNickname);
@@ -712,6 +715,8 @@ class MemberControllerTest {
                         .contentType(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andDo(print());
+
+        assertEquals("8자 별명", member.getNickname());
     }
 
     @Test
