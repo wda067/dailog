@@ -3,9 +3,12 @@ package com.dailog.api.controller;
 import com.dailog.api.config.CustomUserDetails;
 import com.dailog.api.exception.auth.Unauthorized;
 import com.dailog.api.request.oAuth2.CustomOAuth2User;
+import com.dailog.api.response.PagingResponse;
+import com.dailog.api.response.likes.LikesMemberResponse;
 import com.dailog.api.response.likes.LikesResponse;
 import com.dailog.api.service.LikesService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -46,11 +49,17 @@ public class LikesController {
 
     @DeleteMapping("/api/posts/{postId}/likes")
     public void cancel(@PathVariable Long postId,
-                     @AuthenticationPrincipal Object principal) {
+                       @AuthenticationPrincipal Object principal) {
         String username = getUsernameFromPrincipal(principal);
         if (username != null) {
             likesService.cancelLike(username, postId);
         }
+    }
+
+    @GetMapping("/api/posts/{postId}/likes/members")
+    public PagingResponse<LikesMemberResponse> getMembers(@PathVariable Long postId,
+                                                          Pageable pageable) {
+        return likesService.getMembers(postId, pageable);
     }
 
     private String getUsernameFromPrincipal(Object principal) {

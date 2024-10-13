@@ -10,10 +10,13 @@ import com.dailog.api.exception.post.PostNotFound;
 import com.dailog.api.repository.LikesRepository;
 import com.dailog.api.repository.member.MemberRepository;
 import com.dailog.api.repository.post.PostRepository;
+import com.dailog.api.response.PagingResponse;
+import com.dailog.api.response.likes.LikesMemberResponse;
 import com.dailog.api.response.likes.LikesResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -65,5 +68,11 @@ public class LikesService {
         return LikesResponse.builder()
                 .isLiked(alreadyLiked)
                 .build();
+    }
+
+    public PagingResponse<LikesMemberResponse> getMembers(Long postId, Pageable pageable) {
+        Page<LikesMemberResponse> pageMember = likesRepository.findMembersByPostId(postId, pageable);
+
+        return new PagingResponse<>(pageMember, LikesMemberResponse.class);
     }
 }

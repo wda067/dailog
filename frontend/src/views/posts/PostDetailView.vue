@@ -12,14 +12,18 @@
 
     <div class="d-flex justify-content-between align-items-center">
       <div class="d-flex align-items-center">
-        <span v-if="isLiked"><i class="bi bi-suit-heart-fill"></i></span>
-        <span v-else><i class="bi bi-suit-heart"></i></span>
-        <a class="mb-0 ms-1 text-reset text-decoration-none" @click.prevent="toggleLike">
+        <!--좋아요 버튼-->
+        <a class="mb-0 me-1 text-reset text-decoration-none" @click.prevent="toggleLike">
+          <span v-if="isLiked"><i class="bi bi-suit-heart-fill"></i></span>
+          <span v-else><i class="bi bi-suit-heart"></i></span>
+        </a>
+        <!--좋아요누른 회원 목록-->
+        <a class="mb-0 text-reset text-decoration-none" @click.prevent="toggleLikeMembers">
           좋아요<strong class="ms-1">{{ post.likes }}</strong>
         </a>
-        <p class="mb-0 ms-3">
-          <i class="bi bi-chat-text me-1"></i>댓글<strong class="ms-1">{{ post.commentCount }}</strong>
-        </p>
+        <a class="mb-0 ms-3 text-reset text-decoration-none" @click.prevent="toggleComments">
+          <i class="me-1 bi bi-chat-text"></i>댓글<strong class="ms-1">{{ post.commentCount }}</strong>
+        </a>
       </div>
 
       <div>
@@ -38,7 +42,16 @@
     </div>
     <hr class="mt-1 mb-4" />
 
+    <LikeMembers
+      v-if="isLikeMembersVisible"
+      :members="members"
+      :current-page="params.page"
+      :page-count="pageCount"
+      @page="page => (params.page = page)"
+    />
+
     <CommentSection
+      v-if="!isLikeMembersVisible"
       :postId="props.id"
       :commentCount="post.commentCount"
       @comment:changed="fetchPost"
@@ -55,6 +68,7 @@ import PostButtons from '@/components/posts/PostButtons.vue';
 import CommentSection from '@/components/comments/CommentSection.vue';
 import { useAuthStore } from '@/stores/auth';
 import axiosInstance from '@/composables/useApi';
+import LikeMembers from '@/components/likes/LikeMembers.vue';
 
 const { vAlert, vSuccess } = useAlert();
 
@@ -69,6 +83,12 @@ const isAdmin = computed(() => authStore.user.role === 'ADMIN');
 const isLiked = ref(false);
 const isLoggedIn = computed(() => authStore.isLoggedIn);
 
+//좋아요 목록
+const params = ref({
+  page: 1,
+  size: 16,
+});
+
 const props = defineProps({
   id: {
     type: String,
@@ -76,6 +96,49 @@ const props = defineProps({
   }
 });
 
+const members = ref(
+  [] as Array<{
+    nickname: string;
+    likedAt: string;
+  }>,
+);
+
+const isLikeMembersVisible = ref(false);
+const toggleLikeMembers = async () => {
+  isLikeMembersVisible.value = !isLikeMembersVisible.value;
+  if (isLikeMembersVisible.value) {
+    await fetchLikeMembers();
+  }
+};
+const toggleComments = () => {
+  isLikeMembersVisible.value = false;
+};
+
+const totalCount = ref(0);
+const pageCount = computed(() =>
+  Math.ceil(totalCount.value / params.value.size),
+);
+
+const fetchLikeMembers = async () => {
+  try {
+    const { data } = await axiosInstance.get(`/api/posts/${props.id}/likes/members`, {
+      params: params.value
+    });
+    members.value = data.items;
+    totalCount.value = data.totalCount;
+  } catch (error) {
+    console.error('Failed to fetch like members:', error);
+  }
+};
+
+watch(
+  [() => params.value.page, () => isLiked.value, () => post.value.likes],
+  () => {
+    fetchLikeMembers();
+  },
+);
+
+//게시글 조회
 interface Post {
   title: string;
   content: string;
@@ -102,6 +165,7 @@ const fetchPost = async () => {
   try {
     const { data } = await axiosInstance.get(`/api/posts/${props.id}`);
     setPost(data);
+    isLikeMembersVisible.value = false;
     await fetchLikes();
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -110,25 +174,6 @@ const fetchPost = async () => {
         await router.push({ name: 'NotFound', params: { catchAll: '404' } });
       }
       console.log('error: ', error);
-    }
-  }
-};
-
-const fetchLikes = async () => {
-  try {
-    const { data } = await axios.get(`/api/posts/${props.id}/likes`);
-    post.value.likes = data.likes;
-    if (isLoggedIn.value) {
-      const { data } = await axiosInstance.get(`/api/posts/${props.id}/likes/status`);
-      isLiked.value = data.isLiked;
-    }
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      const response = error.response;
-      if (response?.status === 409) {
-      } else {
-        console.log(response);
-      }
     }
   }
 };
@@ -151,18 +196,34 @@ const setPost = ({
   post.value.commentCount = commentCount;
 };
 
-// watch([() => props.id, () => post.value.commentCount, () => post.value.likes], fetchPost);
+const fetchLikes = async () => {
+  try {
+    const { data } = await axios.get(`/api/posts/${props.id}/likes`);
+    post.value.likes = data.likes;
+    if (isLoggedIn.value) {
+      const { data } = await axiosInstance.get(`/api/posts/${props.id}/likes/status`);
+      isLiked.value = data.isLiked;
+    }
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const response = error.response;
+      if (response?.status === 409) {
+      } else {
+        console.log(response);
+      }
+    }
+  }
+};
+
 watch([() => props.id], fetchPost);
-watch([() => post.value.likes, isLiked.value], fetchLikes);
+// watch([() => post.value.likes, () => isLiked.value], fetchLikes);
 
 const toggleLike = async () => {
   try {
     if (!isLiked.value) {
       await axiosInstance.post(`/api/posts/${props.id}/likes`);
-      // isLiked.value = true;
     } else {
       await axiosInstance.delete(`/api/posts/${props.id}/likes`);
-      // isLiked.value = false;
     }
     await fetchLikes();
   } catch (error) {
