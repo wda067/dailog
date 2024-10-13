@@ -66,7 +66,7 @@ public class LikesService {
         boolean alreadyLiked = likesRepository.existsByMemberIdAndPostId(member.getId(), postId);
 
         return LikesResponse.builder()
-                .isLiked(alreadyLiked)
+                .likedStatus(alreadyLiked)
                 .build();
     }
 
