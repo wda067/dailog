@@ -41,7 +41,7 @@ public class Post extends BaseEntity {
     @OneToMany(mappedBy = "post", cascade = ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
 
-    private int views;
+    private long views;
 
     @Builder
     public Post(String title, String content, Member member, List<Comment> comments) {
