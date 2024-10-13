@@ -202,7 +202,7 @@ const fetchLikes = async () => {
     post.value.likes = data.likes;
     if (isLoggedIn.value) {
       const { data } = await axiosInstance.get(`/api/posts/${props.id}/likes/status`);
-      isLiked.value = data.isLiked;
+      isLiked.value = data.likedStatus;
     }
   } catch (error) {
     if (axios.isAxiosError(error)) {
