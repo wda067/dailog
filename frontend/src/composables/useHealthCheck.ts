@@ -33,7 +33,7 @@ export function useHealthCheck() {
   }
 
   //서버 상태를 주기적으로 체크하는 함수
-  function startServerMonitor(interval = 5000) {
+  function startServerMonitor(interval = 10000) {
     setInterval(async () => {
       await checkServerStatus();
       if (!isServerAlive.value) {
