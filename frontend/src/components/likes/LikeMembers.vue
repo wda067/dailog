@@ -1,5 +1,9 @@
 <template>
-  <div>
+  <div v-if="members.length === 0" class="no-members-message">
+    이 글에 좋아요한 멤버가 없습니다.<br />
+    가장 먼저 좋아요를 눌러보세요!
+  </div>
+  <div v-else>
     <AppGrid v-slot="{ item }" :items="members" col-class="col-3">
       <AppCard>
         <template #default>
@@ -10,7 +14,7 @@
         </template>
       </AppCard>
     </AppGrid>
-    <nav aria-label="Page navigation example" class="mt-2">
+    <nav v-if="props.pageCount > 1" aria-label="Page navigation example" class="mt-2">
       <ul class="pagination justify-content-center">
         <li :class="isPrevPage" class="page-item">
           <a
@@ -94,5 +98,12 @@ const goToNextPage = () => {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+}
+
+.no-members-message {
+  text-align: center;
+  font-size: 1.2em;
+  color: gray;
+  margin-top: 6rem;
 }
 </style>
