@@ -11,20 +11,30 @@
     <p style="white-space: normal">{{ post.content }}</p>
 
     <div class="d-flex justify-content-between align-items-center">
-      <p class="mb-0">
-        댓글 <strong>{{ post.commentCount }}</strong>
-      </p>
-      <PostButtons
-        :hasAuthorized="hasAuthorized"
-        :postId="props.id"
-        :isAdmin="isAdmin"
-        @remove="remove"
-        @move-to-prev="moveToPrev"
-        @move-to-next="moveToNext"
-        @move-to-list="moveToList"
-        @move-to-edit="moveToEdit"
-        @remove:admin="removeByAdmin"
-      />
+      <div class="d-flex align-items-center">
+        <span v-if="isLiked"><i class="bi bi-suit-heart-fill"></i></span>
+        <span v-else><i class="bi bi-suit-heart"></i></span>
+        <a class="mb-0 ms-1 text-reset text-decoration-none" @click.prevent="toggleLike">
+          좋아요<strong class="ms-1">{{ post.likes }}</strong>
+        </a>
+        <p class="mb-0 ms-3">
+          <i class="bi bi-chat-text me-1"></i>댓글<strong class="ms-1">{{ post.commentCount }}</strong>
+        </p>
+      </div>
+
+      <div>
+        <PostButtons
+          :hasAuthorized="hasAuthorized"
+          :postId="props.id"
+          :isAdmin="isAdmin"
+          @remove="remove"
+          @move-to-prev="moveToPrev"
+          @move-to-next="moveToNext"
+          @move-to-list="moveToList"
+          @move-to-edit="moveToEdit"
+          @remove:admin="removeByAdmin"
+        />
+      </div>
     </div>
     <hr class="mt-1 mb-4" />
 
@@ -53,15 +63,17 @@ const authStore = useAuthStore();
 const profile = computed(() => authStore.user);
 const currentUserId = computed(() => profile.value?.id);
 const hasAuthorized = computed(
-  () => post.value.memberId === currentUserId.value,
+  () => post.value.memberId === currentUserId.value
 );
 const isAdmin = computed(() => authStore.user.role === 'ADMIN');
+const isLiked = ref(false);
+const isLoggedIn = computed(() => authStore.isLoggedIn);
 
 const props = defineProps({
   id: {
     type: String,
-    required: true,
-  },
+    required: true
+  }
 });
 
 interface Post {
@@ -72,6 +84,7 @@ interface Post {
   nickname: string;
   views: number;
   commentCount: number;
+  likes: number;
 }
 
 const post = ref<Post>({
@@ -82,12 +95,14 @@ const post = ref<Post>({
   nickname: '',
   views: 0,
   commentCount: 0,
+  likes: 0
 });
 
 const fetchPost = async () => {
   try {
     const { data } = await axiosInstance.get(`/api/posts/${props.id}`);
     setPost(data);
+    await fetchLikes();
   } catch (error) {
     if (axios.isAxiosError(error)) {
       const response = error.response;
@@ -99,15 +114,34 @@ const fetchPost = async () => {
   }
 };
 
+const fetchLikes = async () => {
+  try {
+    const { data } = await axios.get(`/api/posts/${props.id}/likes`);
+    post.value.likes = data.likes;
+    if (isLoggedIn.value) {
+      const { data } = await axiosInstance.get(`/api/posts/${props.id}/likes/status`);
+      isLiked.value = data.isLiked;
+    }
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const response = error.response;
+      if (response?.status === 409) {
+      } else {
+        console.log(response);
+      }
+    }
+  }
+};
+
 const setPost = ({
-  title,
-  content,
-  createdAt,
-  memberId,
-  nickname,
-  views,
-  commentCount,
-}: Post) => {
+                   title,
+                   content,
+                   createdAt,
+                   memberId,
+                   nickname,
+                   views,
+                   commentCount,
+                 }: Post) => {
   post.value.title = title;
   post.value.content = content;
   post.value.createdAt = createdAt;
@@ -117,7 +151,32 @@ const setPost = ({
   post.value.commentCount = commentCount;
 };
 
-watch([() => props.id, () => post.value.commentCount], fetchPost);
+// watch([() => props.id, () => post.value.commentCount, () => post.value.likes], fetchPost);
+watch([() => props.id], fetchPost);
+watch([() => post.value.likes, isLiked.value], fetchLikes);
+
+const toggleLike = async () => {
+  try {
+    if (!isLiked.value) {
+      await axiosInstance.post(`/api/posts/${props.id}/likes`);
+      // isLiked.value = true;
+    } else {
+      await axiosInstance.delete(`/api/posts/${props.id}/likes`);
+      // isLiked.value = false;
+    }
+    await fetchLikes();
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const response = error.response;
+      if (response?.status === 401) {
+        const result = confirm('이 기능은 로그인이 필요합니다. 로그인하시겠습니까?');
+        if (result) {
+          await router.push({ name: 'LoginView' });
+        }
+      }
+    }
+  }
+}
 
 //Button
 const remove = async () => {
@@ -127,8 +186,8 @@ const remove = async () => {
     }
     await axios.delete(`/api/posts/${props.id}`, {
       headers: {
-        Authorization: `Bearer ${localStorage.getItem('access')}`,
-      },
+        Authorization: `Bearer ${localStorage.getItem('access')}`
+      }
     });
     router
       .push({ name: 'PostList' })
@@ -152,8 +211,8 @@ const removeByAdmin = async () => {
     }
     await axios.delete(`/api/admin/posts/${props.id}`, {
       headers: {
-        Authorization: `Bearer ${localStorage.getItem('access')}`,
-      },
+        Authorization: `Bearer ${localStorage.getItem('access')}`
+      }
     });
     router
       .push({ name: 'PostList' })
@@ -173,7 +232,7 @@ const removeByAdmin = async () => {
 const moveToPrev = async () => {
   try {
     const { data } = await axios.get(`/api/posts/${props.id}/prev`);
-    router.replace({ name: 'PostDetail', params: { id: data.id } });
+    await router.replace({ name: 'PostDetail', params: { id: data.id } });
   } catch (error) {
     if (axios.isAxiosError(error)) {
       if (error.response?.status === 404) {
@@ -204,13 +263,13 @@ const moveToNext = async () => {
 
 const moveToList = () =>
   router.push({
-    name: 'PostList',
+    name: 'PostList'
   });
 
 const moveToEdit = () =>
   router.push({
     name: 'PostEdit',
-    params: { id: props.id },
+    params: { id: props.id }
   });
 
 onMounted(fetchPost);

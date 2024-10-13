@@ -53,6 +53,7 @@ const posts = ref(
     nickname: string;
     commentCount: number;
     views: number;
+    likes: number;
   }>,
 );
 const totalCount = ref(0);
