@@ -8,10 +8,10 @@ import com.dailog.api.request.post.PostEdit;
 import com.dailog.api.request.post.PostPageRequest;
 import com.dailog.api.request.post.PostSearch;
 import com.dailog.api.response.PagingResponse;
+import com.dailog.api.response.post.PostDetailResponse;
 import com.dailog.api.response.post.PostIdResponse;
-import com.dailog.api.response.post.PostResponse;
+import com.dailog.api.response.post.PostListResponse;
 import com.dailog.api.service.PostService;
-import com.dailog.api.util.JWTUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -101,7 +101,7 @@ public class PostController {
     }
 
     @GetMapping("/api/posts/{postId}")
-    public PostResponse get(@PathVariable Long postId, HttpServletRequest request) {
+    public PostDetailResponse get(@PathVariable Long postId, HttpServletRequest request) {
         postService.viewPost(postId, request);
         return postService.get(postId);
     }
@@ -126,13 +126,13 @@ public class PostController {
         return postService.getNextPostId(postId);
     }
 
-    @GetMapping("/api/posts")
-    public PagingResponse<PostResponse> getList(PostPageRequest postPageRequest) {
-        return postService.getList(postPageRequest);
-    }
+    //@GetMapping("/api/posts")
+    //public PagingResponse<PostListResponse> getList(PostPageRequest postPageRequest) {
+    //    return postService.getList(postPageRequest);
+    //}
 
     @GetMapping(value = "/api/posts", params = {"searchDateType", "searchType", "searchQuery"})
-    public PagingResponse<PostResponse> getSearchList(PostSearch postSearch, PostPageRequest postPageRequest) {
+    public PagingResponse<PostListResponse> getSearchList(PostSearch postSearch, PostPageRequest postPageRequest) {
         return postService.getList(postSearch, postPageRequest);
     }
 

@@ -4,8 +4,6 @@ import com.dailog.api.domain.Member;
 import com.dailog.api.domain.Post;
 import com.dailog.api.domain.PostEditor;
 import com.dailog.api.domain.PostEditor.PostEditorBuilder;
-import com.dailog.api.domain.enums.Role;
-import com.dailog.api.exception.auth.Unauthorized;
 import com.dailog.api.exception.member.MemberNotFound;
 import com.dailog.api.exception.post.ForbiddenPostAccess;
 import com.dailog.api.exception.post.PostNotFound;
@@ -16,14 +14,13 @@ import com.dailog.api.request.post.PostEdit;
 import com.dailog.api.request.post.PostPageRequest;
 import com.dailog.api.request.post.PostSearch;
 import com.dailog.api.response.PagingResponse;
+import com.dailog.api.response.post.PostDetailResponse;
 import com.dailog.api.response.post.PostIdResponse;
-import com.dailog.api.response.post.PostResponse;
+import com.dailog.api.response.post.PostListResponse;
 import com.dailog.api.util.JWTUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Duration;
-import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -56,10 +53,10 @@ public class PostService {
         postRepository.save(post);
     }
 
-    public PostResponse get(Long postId) {
+    public PostDetailResponse get(Long postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(PostNotFound::new);
-        return new PostResponse(post, getViews(postId));
+        return new PostDetailResponse(post, getViews(postId));
     }
 
     @Transactional
@@ -85,14 +82,14 @@ public class PostService {
         redisTemplate.opsForValue().increment(key);
     }
 
-    public int getViews(Long postId) {
+    public long getViews(Long postId) {
         String key = "post:views:" + postId;
         Object currentViews = redisTemplate.opsForValue().get(key);
 
         if (currentViews == null) {
             Post post = postRepository.findById(postId)
                     .orElseThrow(PostNotFound::new);
-            int dbViews = post.getViews();
+            long dbViews = post.getViews();
             redisTemplate.opsForValue().set(key, dbViews);
             return dbViews;
         }
@@ -123,21 +120,21 @@ public class PostService {
     }
 
     //글이 너무 많은 경우 비용이 너무 많이 든다. -> page와 size를 request로 받아 조회
-    public PagingResponse<PostResponse> getList(PostPageRequest postPageRequest) {
-        Page<Post> postPage = postRepository.getList(postPageRequest);
-
-        return new PagingResponse<>(postPage, PostResponse.class);
-    }
+    //public PagingResponse<PostListResponse> getList(PostPageRequest postPageRequest) {
+    //    Page<Post> postPage = postRepository.getList(postPageRequest);
+    //
+    //    return new PagingResponse<>(postPage, PostListResponse.class);
+    //}
 
     //게시글 검색 결과 조회
-    public PagingResponse<PostResponse> getList(PostSearch postSearch, PostPageRequest postPageRequest) {
-        Page<Post> postPage = postRepository.getList(postSearch, postPageRequest);
+    public PagingResponse<PostListResponse> getList(PostSearch postSearch, PostPageRequest postPageRequest) {
+        Page<PostListResponse> postPage = postRepository.getList(postSearch, postPageRequest);
 
-        for (Post post : postPage.getContent()) {
-            post.updateViews(getViews(post.getId()));
+        for (PostListResponse postListResponse : postPage.getContent()) {
+            postListResponse.setViews(getViews(postListResponse.getId()));
         }
 
-        return new PagingResponse<>(postPage, PostResponse.class);
+        return new PagingResponse<>(postPage, PostListResponse.class);
     }
 
     public PostIdResponse getPrevPostId(Long postId) {

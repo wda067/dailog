@@ -1,11 +1,15 @@
 package com.dailog.api.repository.post;
 
+import static com.dailog.api.domain.QLikes.likes;
 import static com.dailog.api.domain.QPost.post;
+import static com.querydsl.core.types.Projections.constructor;
+import static com.querydsl.jpa.JPAExpressions.select;
 
 import com.dailog.api.domain.Post;
 import com.dailog.api.domain.QPost;
 import com.dailog.api.request.post.PostPageRequest;
 import com.dailog.api.request.post.PostSearch;
+import com.dailog.api.response.post.PostListResponse;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -38,7 +42,7 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom {
     }
 
     @Override
-    public Page<Post> getList(PostSearch postSearch, PostPageRequest postPageRequest) {
+    public Page<PostListResponse> getList(PostSearch postSearch, PostPageRequest postPageRequest) {
 
         BooleanBuilder builder = new BooleanBuilder();
         builder.and(regDtsAfter(postSearch.getSearchDateType()));
@@ -49,7 +53,19 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom {
                 .where(builder)
                 .fetchFirst();
 
-        List<Post> posts = queryFactory.selectFrom(post)
+        List<PostListResponse> posts = queryFactory.select(
+                        constructor(PostListResponse.class,
+                                post.id,
+                                post.title,
+                                post.content,
+                                post.createdAt,
+                                post.member.nickname,
+                                post.comments.size().longValue(),
+                                post.views,
+                                select(likes.count())
+                                        .from(likes)
+                                        .where(likes.post.eq(post))))
+                .from(post)
                 .where(builder)
                 .limit(postPageRequest.getSize())
                 .offset(postPageRequest.getOffset())
@@ -58,6 +74,28 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom {
 
         return new PageImpl<>(posts, postPageRequest.getPageable(), count);
     }
+
+    //@Override
+    //public Page<Post> getList(PostSearch postSearch, PostPageRequest postPageRequest) {
+    //
+    //    BooleanBuilder builder = new BooleanBuilder();
+    //    builder.and(regDtsAfter(postSearch.getSearchDateType()));
+    //    builder.and(searchByLike(postSearch.getSearchQuery(), postSearch.getSearchType()));
+    //
+    //    Long count = queryFactory.select(post.count())
+    //            .from(post)
+    //            .where(builder)
+    //            .fetchFirst();
+    //
+    //    List<Post> posts = queryFactory.selectFrom(post)
+    //            .where(builder)
+    //            .limit(postPageRequest.getSize())
+    //            .offset(postPageRequest.getOffset())
+    //            .orderBy(post.id.desc())
+    //            .fetch();
+    //
+    //    return new PageImpl<>(posts, postPageRequest.getPageable(), count);
+    //}
 
     @Override
     public Optional<Post> findPrevPost(Long id) {

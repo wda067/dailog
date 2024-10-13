@@ -4,6 +4,7 @@ package com.dailog.api.repository.post;
 import com.dailog.api.domain.Post;
 import com.dailog.api.request.post.PostPageRequest;
 import com.dailog.api.request.post.PostSearch;
+import com.dailog.api.response.post.PostListResponse;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 
@@ -11,7 +12,7 @@ public interface PostRepositoryCustom {
 
     Page<Post> getList(PostPageRequest postPageRequest);
 
-    Page<Post> getList(PostSearch postSearch, PostPageRequest postPageRequest);
+    Page<PostListResponse> getList(PostSearch postSearch, PostPageRequest postPageRequest);
 
     Optional<Post> findPrevPost(Long id);
 

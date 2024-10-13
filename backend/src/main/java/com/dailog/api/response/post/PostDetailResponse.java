@@ -7,13 +7,12 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 
 /**
  * 서비스 정책에 맞는 클래스
  */
 @Getter
-public class PostResponse {
+public class PostDetailResponse {
 
     private final Long id;
     private final Long memberId;
@@ -22,10 +21,10 @@ public class PostResponse {
     private final String content;
     private final String createdAt;
     private final String createdBy;
-    private final int commentCount;
-    private final int views;
+    private final long commentCount;
+    private final long views;
 
-    public PostResponse(Post post) {
+    public PostDetailResponse(Post post) {
         this.id = post.getId();
         this.memberId = post.getMemberId();
         this.title = post.getTitle().substring(0, Math.min(post.getTitle().length(), 60));
@@ -41,7 +40,7 @@ public class PostResponse {
         this.createdBy = post.getCreatedBy();
     }
 
-    public PostResponse(Post post, int views) {
+    public PostDetailResponse(Post post, long views) {
         this.id = post.getId();
         this.memberId = post.getMemberId();
         this.title = post.getTitle().substring(0, Math.min(post.getTitle().length(), 60));
@@ -58,8 +57,8 @@ public class PostResponse {
     }
 
     @Builder
-    public PostResponse(Long id, Long memberId, String nickname, String title, String content,
-                        LocalDateTime createdAt, String createdBy, int commentCount, int views) {
+    public PostDetailResponse(Long id, Long memberId, String nickname, String title, String content,
+                              LocalDateTime createdAt, String createdBy, long commentCount, long views) {
         this.id = id;
         this.memberId = memberId;
         this.nickname = nickname;
