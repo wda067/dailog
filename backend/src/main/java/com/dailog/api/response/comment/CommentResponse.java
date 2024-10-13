@@ -24,8 +24,7 @@ public class CommentResponse {
     private final String createdAt;
     private final String updatedAt;
     private final String ipAddress;
-    @JsonProperty("isParent")
-    private final boolean isParent;
+    private final boolean parentStatus;
 
     public CommentResponse(Comment comment) {
         this.id = comment.getId();
@@ -46,7 +45,7 @@ public class CommentResponse {
             this.ipAddress = "";
         }
 
-        this.isParent = comment.getParentComment() == null;
+        this.parentStatus = comment.getParentComment() == null;
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         ZonedDateTime utcCreatedAt = comment.getCreatedAt().atZone(ZoneId.of("UTC"));
@@ -61,14 +60,14 @@ public class CommentResponse {
     @Builder
     public CommentResponse(Long id, String nickname, Long memberId, String anonymousName, String password,
                            String content, LocalDateTime createdAt, LocalDateTime updatedAt, String ipAddress,
-                           boolean isParent) {
+                           boolean parentStatus) {
         this.id = id;
         this.nickname = nickname;
         this.memberId = String.valueOf(memberId);
         this.anonymousName = anonymousName;
         this.password = password;
         this.content = content;
-        this.isParent = isParent;
+        this.parentStatus = parentStatus;
         if (ipAddress != null) {
             String[] split = ipAddress.split("\\.");
             this.ipAddress = split[0] + "." + split[1];

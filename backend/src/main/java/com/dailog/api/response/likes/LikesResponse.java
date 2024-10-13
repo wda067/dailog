@@ -1,6 +1,5 @@
 package com.dailog.api.response.likes;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -8,12 +7,11 @@ import lombok.Getter;
 public class LikesResponse {
 
     private final long likes;
-    @JsonProperty("isLiked")
-    private final boolean isLiked;
+    private final boolean likedStatus;
 
     @Builder
-    public LikesResponse(long likes, boolean isLiked) {
+    public LikesResponse(long likes, boolean likedStatus) {
         this.likes = likes;
-        this.isLiked = isLiked;
+        this.likedStatus = likedStatus;
     }
 }
