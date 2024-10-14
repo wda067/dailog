@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +27,7 @@ public class LikesService {
     private final MemberRepository memberRepository;
     private final PostRepository postRepository;
 
+    @Transactional
     public void like(String email, Long postId) {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(MemberNotFound::new);
@@ -42,15 +44,20 @@ public class LikesService {
                 .post(post)
                 .build();
         likesRepository.save(likes);
+        post.addLikes(likes);
     }
 
+    @Transactional
     public void cancelLike(String email, Long postId) {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(MemberNotFound::new);
+        Post post = postRepository.findById(postId)
+                .orElseThrow(PostNotFound::new);
         Likes likes = likesRepository.findByMemberIdAndPostId(member.getId(), postId)
                 .orElseThrow(LikesNotFound::new);
 
         likesRepository.delete(likes);
+        post.cancelLikes(likes);
     }
 
     public LikesResponse getCount(Long postId) {
