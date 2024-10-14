@@ -2,7 +2,7 @@
   <ul style="padding-left: 0">
     <li v-for="item in items" :key="item.id" class="card" style="border: none">
       <!--부모 댓글-->
-      <div v-if="item.isParent">
+      <div v-if="item.parentStatus">
         <!--수정 중인 댓글-->
         <div v-if="isEditingComment(item.id)" class="mt-2">
           <!--익명 댓글은 누구나 수정 가능-->
@@ -412,7 +412,7 @@ interface Comment {
   updatedAt: string;
   ipAddress: string;
   childComments: Comment[];
-  isParent: boolean;
+  parentStatus: boolean;
 }
 
 const props = defineProps<{

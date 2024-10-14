@@ -64,7 +64,7 @@ interface Comment {
   updatedAt: string;
   ipAddress: string;
   childComments: Comment[];
-  isParent: boolean;
+  parentStatus: boolean;
 }
 
 interface NewComment {
@@ -233,7 +233,7 @@ const replyComment = async ({
 
   let prevChildCommentCount = 0;
   for (let i = parentCommentIndex + 1; i < comments.value.length; i++) {
-    if (comments.value[i].isParent) break;
+    if (comments.value[i].parentStatus) break;
     prevChildCommentCount++;
   }
 
@@ -245,7 +245,7 @@ const replyComment = async ({
 
   let nextChildCommentCount = 0;
   for (let i = parentCommentIndex + 1; i < comments.value.length; i++) {
-    if (comments.value[i].isParent) break;
+    if (comments.value[i].parentStatus) break;
     nextChildCommentCount++;
   }
 
