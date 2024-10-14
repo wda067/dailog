@@ -15,10 +15,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.dailog.api.config.CustomMockAdmin;
 import com.dailog.api.config.CustomMockMember;
+import com.dailog.api.domain.Likes;
 import com.dailog.api.domain.Member;
 import com.dailog.api.domain.Post;
 import com.dailog.api.domain.enums.Role;
 import com.dailog.api.exception.post.PostNotFound;
+import com.dailog.api.repository.LikesRepository;
 import com.dailog.api.repository.member.MemberRepository;
 import com.dailog.api.repository.post.PostRepository;
 import com.dailog.api.request.post.PostCreate;
@@ -61,6 +63,8 @@ class PostControllerTest {
     private JdbcTemplate jdbcTemplate;
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
+    @Autowired
+    private LikesRepository likesRepository;
 
     @AfterEach
     void clean() {
@@ -202,7 +206,10 @@ class PostControllerTest {
         postRepository.saveAll(requestPosts);
 
         //expected
-        mockMvc.perform(get("/api/posts?page=1&size=10&searchDateType=&searchType=titleOrContent&searchQuery=")
+        String pagination = "page=1&size=10&sortByLikes=false";
+        String searchParams = "searchDateType=&searchType=titleOrContent&searchQuery=";
+
+        mockMvc.perform(get("/api/posts?" + pagination + "&" + searchParams)
                         .contentType(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items.length()", is(10)))
@@ -229,7 +236,10 @@ class PostControllerTest {
         postRepository.saveAll(requestPosts);
 
         //expected
-        mockMvc.perform(get("/api/posts?page=0&size=10&searchDateType=&searchType=titleOrContent&searchQuery=")
+        String pagination = "page=1&size=10&sortByLikes=false";
+        String searchParams = "searchDateType=&searchType=titleOrContent&searchQuery=";
+
+        mockMvc.perform(get("/api/posts?" + pagination + "&" + searchParams)
                         .contentType(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items.length()", is(10)))
@@ -394,7 +404,7 @@ class PostControllerTest {
 
         postRepository.saveAll(requestPosts);
 
-        String pageRequest = "page=1&size=30";
+        String pageRequest = "page=1&size=30&sortByLikes=false";
         String searchRequest = "&searchDateType=&searchType=title&searchQuery=제목 1";
         //1, 10~19 -> 11개
 
@@ -425,7 +435,7 @@ class PostControllerTest {
 
         postRepository.saveAll(requestPosts);
 
-        String pageRequest = "page=1&size=30";
+        String pageRequest = "page=1&size=30&sortByLikes=false";
         String searchRequest = "&searchDateType=&searchType=content&searchQuery=내용 3";
         //3, 30 -> 2개
 
@@ -456,7 +466,7 @@ class PostControllerTest {
 
         postRepository.saveAll(requestPosts);
 
-        String pageRequest = "page=1&size=30";
+        String pageRequest = "page=1&size=30&sortByLikes=false";
         String searchRequest = "&searchDateType=&searchType=titleOrContent&searchQuery=2";
         //2, 12, 20~29 -> 12개
 
@@ -504,7 +514,7 @@ class PostControllerTest {
         jdbcTemplate.update(updateQuery, now().minusMonths(1), oneMonthAgoPost.getId());
         jdbcTemplate.update(updateQuery, now().minusYears(1), oneYearAgoPost.getId());
 
-        String pageRequest = "page=1&size=10";
+        String pageRequest = "page=1&size=10&sortByLikes=false";
         String searchDateType = "1w";
         String searchRequest = "&searchDateType=" + searchDateType + "&searchType=&searchQuery=";
         //expected
@@ -551,7 +561,7 @@ class PostControllerTest {
         jdbcTemplate.update(updateQuery, now().minusMonths(1), oneMonthAgoPost.getId());
         jdbcTemplate.update(updateQuery, now().minusYears(1), oneYearAgoPost.getId());
 
-        String pageRequest = "page=1&size=10";
+        String pageRequest = "page=1&size=10&sortByLikes=false";
         String searchDateType = "6m";
         String searchRequest = "&searchDateType=" + searchDateType + "&searchType=&searchQuery=";
 
@@ -813,5 +823,41 @@ class PostControllerTest {
                 .andDo(print());
 
         assertEquals(1, postRepository.count());
+    }
+
+    @Test
+    @CustomMockMember
+    @DisplayName("게시글 목록 좋아요 순으로 조회")
+    void should_GetPosts_When_SortedByLikes() throws Exception {
+        //given
+        Member member = memberRepository.findAll().get(0);
+
+        List<Post> requestPosts = IntStream.range(1, 31)
+                .mapToObj(i -> Post.builder()
+                        .title("제목 " + i)
+                        .content("내용 " + i)
+                        .member(member)
+                        .build())
+                .toList();
+        postRepository.saveAll(requestPosts);
+
+        Likes likes = Likes.builder()
+                .member(member)
+                .post(requestPosts.get(0))
+                .build();
+        likesRepository.save(likes);
+
+        //expected
+        String pagination = "page=1&size=10&sortByLikes=true";
+        String searchParams = "searchDateType=&searchType=titleOrContent&searchQuery=";
+
+        mockMvc.perform(get("/api/posts?" + pagination + "&" + searchParams)
+                        .contentType(APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items.length()", is(10)))
+                .andExpect(jsonPath("$.items.[0].title").value("제목 1"))
+                .andExpect(jsonPath("$.items.[0].content").value("내용 1"))
+                .andExpect(jsonPath("$.items.[0].likes").value("1"))
+                .andDo(print());
     }
 }
