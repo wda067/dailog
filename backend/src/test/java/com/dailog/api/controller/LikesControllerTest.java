@@ -3,8 +3,10 @@ package com.dailog.api.controller;
 import static com.dailog.api.domain.enums.Role.MEMBER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.dailog.api.config.CustomMockMember;
@@ -147,5 +149,43 @@ class LikesControllerTest {
 
         //then
         assertEquals(0L, likesRepository.countByPostId(post.getId()));
+    }
+
+    @Test
+    @CustomMockMember
+    @DisplayName("게시글에 좋아요를 누른 회원 목록을 조회한다.")
+    void should_GetMembersWhoLiked_When_ValidRequest() throws Exception {
+        //given
+        Member loggedInMember = memberRepository.findAll().get(0);
+        Post post = Post.builder()
+                .member(loggedInMember)
+                .title("제목")
+                .content("내용")
+                .build();
+        postRepository.save(post);
+
+        for (int i = 1; i <= 50; i++) {
+            Member member = Member.builder()
+                    .nickname(i+"번째 회원")
+                    .email("member@test.com" + i)
+                    .password("1234")
+                    .role(MEMBER)
+                    .build();
+            memberRepository.save(member);
+
+            Likes likes = Likes.builder()
+                    .member(member)
+                    .post(post)
+                    .build();
+            likesRepository.save(likes);
+        }
+
+        //when
+        mockMvc.perform(get("/api/posts/{postId}/likes/members?page=0&size=10", post.getId())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items.[0].nickname").value("50번째 회원"))
+                .andExpect(jsonPath("$.items.[9].nickname").value("41번째 회원"))
+                .andDo(print());
     }
 }
