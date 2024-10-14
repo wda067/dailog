@@ -43,8 +43,11 @@ public class Post extends BaseEntity {
 
     private long views;
 
+    @OneToMany(mappedBy = "post", cascade = ALL, orphanRemoval = true)
+    private List<Likes> likes = new ArrayList<>();
+
     @Builder
-    public Post(String title, String content, Member member, List<Comment> comments) {
+    public Post(String title, String content, Member member, List<Comment> comments, List<Likes> likes) {
         this.title = title;
         this.content = content;
         this.member = member;
@@ -52,6 +55,7 @@ public class Post extends BaseEntity {
             comments = new ArrayList<>();
         }
         this.comments = comments;
+        this.likes = likes;
     }
 
     public PostEditorBuilder toEditor() {
@@ -82,5 +86,13 @@ public class Post extends BaseEntity {
 
     public void updateViews(Integer views) {
         this.views = views;
+    }
+
+    public void addLikes(Likes likes) {
+        this.likes.add(likes);
+    }
+
+    public void cancelLikes(Likes likes) {
+        this.likes.remove(likes);
     }
 }
