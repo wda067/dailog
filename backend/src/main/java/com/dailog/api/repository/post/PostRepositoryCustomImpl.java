@@ -11,9 +11,17 @@ import com.dailog.api.request.post.PostPageRequest;
 import com.dailog.api.request.post.PostSearch;
 import com.dailog.api.response.post.PostListResponse;
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.ExpressionUtils;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.NumberExpression;
+import com.querydsl.core.types.dsl.NumberPath;
+import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -53,6 +61,12 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom {
                 .where(builder)
                 .fetchFirst();
 
+        List<OrderSpecifier<?>> orderSpecifiers = new ArrayList<>();
+        if (postPageRequest.isSortByLikes()) {
+            orderSpecifiers.add(post.likes.size().desc());
+        }
+        orderSpecifiers.add(post.id.desc());
+
         List<PostListResponse> posts = queryFactory.select(
                         constructor(PostListResponse.class,
                                 post.id,
@@ -62,40 +76,16 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom {
                                 post.member.nickname,
                                 post.comments.size().longValue(),
                                 post.views,
-                                select(likes.count())
-                                        .from(likes)
-                                        .where(likes.post.eq(post))))
+                                post.likes.size().longValue()))
                 .from(post)
                 .where(builder)
                 .limit(postPageRequest.getSize())
                 .offset(postPageRequest.getOffset())
-                .orderBy(post.id.desc())
+                .orderBy(orderSpecifiers.toArray(new OrderSpecifier<?>[0]))
                 .fetch();
 
         return new PageImpl<>(posts, postPageRequest.getPageable(), count);
     }
-
-    //@Override
-    //public Page<Post> getList(PostSearch postSearch, PostPageRequest postPageRequest) {
-    //
-    //    BooleanBuilder builder = new BooleanBuilder();
-    //    builder.and(regDtsAfter(postSearch.getSearchDateType()));
-    //    builder.and(searchByLike(postSearch.getSearchQuery(), postSearch.getSearchType()));
-    //
-    //    Long count = queryFactory.select(post.count())
-    //            .from(post)
-    //            .where(builder)
-    //            .fetchFirst();
-    //
-    //    List<Post> posts = queryFactory.selectFrom(post)
-    //            .where(builder)
-    //            .limit(postPageRequest.getSize())
-    //            .offset(postPageRequest.getOffset())
-    //            .orderBy(post.id.desc())
-    //            .fetch();
-    //
-    //    return new PageImpl<>(posts, postPageRequest.getPageable(), count);
-    //}
 
     @Override
     public Optional<Post> findPrevPost(Long id) {

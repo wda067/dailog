@@ -18,12 +18,8 @@ public class PostPageRequest {
     private int page = 1;
     @Builder.Default
     private int size = 10;
-
-    //@Builder
-    //public PostSearch(Integer page, Integer size) {
-    //    this.page = page == null ? 1 : page;
-    //    this.size = size == null ? 20 : size;
-    //}
+    @Builder.Default
+    private boolean sortByLikes = false;
 
     public long getOffset() {
         //페이지가 0일 때 첫 번째 페이지
