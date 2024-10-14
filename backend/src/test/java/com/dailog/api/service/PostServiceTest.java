@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.dailog.api.domain.Comment;
+import com.dailog.api.domain.Likes;
 import com.dailog.api.domain.Member;
 import com.dailog.api.domain.Post;
 import com.dailog.api.exception.post.ForbiddenPostAccess;
@@ -29,6 +30,8 @@ import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -38,6 +41,7 @@ import org.springframework.transaction.annotation.Transactional;
 @SpringBootTest
 class PostServiceTest {
 
+    private static final Logger log = LoggerFactory.getLogger(PostServiceTest.class);
     @Autowired
     private PostService postService;
     @Autowired
@@ -144,10 +148,7 @@ class PostServiceTest {
                 .toList();
         postRepository.saveAll(requestPosts);
 
-        PostPageRequest postPageRequest = PostPageRequest.builder()
-                .page(1)
-                .size(10)
-                .build();
+        PostPageRequest postPageRequest = PostPageRequest.builder().build();
 
         PostSearch postSearch = new PostSearch();
 
@@ -158,6 +159,52 @@ class PostServiceTest {
         assertEquals(10L, pagingResponse.getSize());
         assertEquals("제목 30", pagingResponse.getItems().get(0).getTitle());
         assertEquals("제목 21", pagingResponse.getItems().get(9).getTitle());
+    }
+
+    @Test
+    @Transactional(readOnly = true)
+    @DisplayName("글 1페이지 조회 - 좋아요 순으로 정렬")
+    void should_GetPagedPosts_When_SortByLikes() {
+        //given
+        Member member = getMember();
+
+        List<Post> posts = IntStream.range(1, 31)
+                .mapToObj(i -> Post.builder()
+                        .title("제목 " + i)
+                        .content("내용 " + i)
+                        .member(member)
+                        .build())
+                .toList();
+        postRepository.saveAll(posts);
+
+        IntStream.range(0, 30)
+                        .forEach(i -> {
+                            if (i % 2 != 0) {
+                                Likes likes = Likes.builder()
+                                        .member(member)
+                                        .post(posts.get(i))
+                                        .build();
+                                likesRepository.save(likes);
+                            }
+                        });
+
+        PostPageRequest postPageRequest = PostPageRequest.builder()
+                .page(1)
+                .size(10)
+                .sortByLikes(true)
+                .build();
+
+        PostSearch postSearch = new PostSearch();
+
+        //when
+        PagingResponse<PostListResponse> pagingResponse = postService.getList(postSearch, postPageRequest);
+
+        //then
+        assertEquals(10L, pagingResponse.getSize());
+        assertEquals("제목 30", pagingResponse.getItems().get(0).getTitle());
+        assertEquals("제목 12", pagingResponse.getItems().get(9).getTitle());
+        assertEquals(1L, pagingResponse.getItems().get(0).getLikes());
+        assertEquals(1L, pagingResponse.getItems().get(9).getLikes());
     }
 
     @Test
