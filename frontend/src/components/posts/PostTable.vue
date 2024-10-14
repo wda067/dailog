@@ -7,7 +7,12 @@
       <th class="text-center col-author" scope="col">글쓴이</th>
       <th class="text-center col-date" scope="col">작성일</th>
       <th class="text-center col-date" scope="col">조회</th>
-      <th class="text-center col-date" scope="col">좋아요</th>
+      <th class="text-center col-date" scope="col">
+        <a class="likes-link"
+           @click.prevent="emits('sortByLikes')">
+          좋아요<i class="bi bi-caret-down-fill" style="font-size: 12px;"></i>
+        </a>
+      </th>
     </tr>
     </thead>
     <tbody>
@@ -52,7 +57,7 @@ defineProps({
   }
 });
 
-const emits = defineEmits(['postClick']);
+const emits = defineEmits(['postClick', 'sortByLikes']);
 
 const formatDate = (date: string) => {
   //date 매개변수 타입 명시
@@ -63,6 +68,10 @@ const formatDate = (date: string) => {
   } else {
     return format(createdAt, 'yyyy-MM-dd');
   }
+};
+
+const sortByLikes = async () => {
+  emits('sortByLikes');
 };
 
 const postClick = (id: string) => {
@@ -122,5 +131,15 @@ td {
   color: #ff0000;
   font-weight: bold;
   text-decoration: none;
+}
+
+.likes-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.likes-link:hover {
+  text-decoration: underline;
+  color: inherit;
 }
 </style>

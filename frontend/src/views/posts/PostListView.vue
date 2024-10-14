@@ -8,7 +8,11 @@
     <AppError v-else-if="error" :message="getErrorMessage()" />
 
     <template v-else>
-      <PostTable :items="posts" @postClick="moveToDetail" />
+      <PostTable
+        :items="posts"
+        @postClick="moveToDetail"
+        @sortByLikes="toggleSort"
+      />
       <div
         class="d-grid gap-2 d-md-flex justify-content-md-end align-items-center"
       >
@@ -44,6 +48,10 @@ import AppSelect from '@/components/app/AppSelect.vue';
 
 const error = ref<null | AxiosError>(null);
 const loading = ref(false);
+const toggleSort = () => {
+  params.value.sortByLikes = !params.value.sortByLikes;
+  fetchPosts();
+};
 
 const posts = ref(
   [] as Array<{
@@ -56,10 +64,12 @@ const posts = ref(
     likes: number;
   }>,
 );
+
 const totalCount = ref(0);
 const params = ref({
   page: 1,
   size: 10,
+  sortByLikes: false,
   searchDateType: '',
   searchType: 'titleOrContent',
   searchQuery: '',
@@ -99,7 +109,7 @@ const updateSize = (newSize: number) => {
 };
 
 watch(
-  () => params.value.page,
+  [() => params.value.page, params.value.sortByLikes],
   () => {
     fetchPosts();
   },
