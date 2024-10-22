@@ -14,8 +14,8 @@ import com.dailog.api.config.handler.OAuthLoginFailHandler;
 import com.dailog.api.domain.Member;
 import com.dailog.api.repository.RefreshTokenRepository;
 import com.dailog.api.repository.member.MemberRepository;
-import com.dailog.api.service.RefreshTokenService;
-import com.dailog.api.service.oAuth2.CustomOAuth2UserService;
+import com.dailog.api.service.auth.RefreshTokenService;
+import com.dailog.api.service.auth.CustomOAuth2UserService;
 import com.dailog.api.util.JWTUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Arrays;
@@ -77,7 +77,8 @@ public class SecurityConfig {
                                 "/api/auth/logout",
                                 "/api/auth/reissue",
                                 "/api/oauth2-jwt-header",
-                                "/api/health-check"
+                                "/api/health-check",
+                                "/api/stock/**"
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
                         .requestMatchers(HttpMethod.POST,

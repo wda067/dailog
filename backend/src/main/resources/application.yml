@@ -84,3 +84,7 @@ jasypt:
 
 server:
   forward-headers-strategy: native
+
+korea-investment:
+  app-key: ENC(BtXZyfYn6kgIA0Oxi+fPRr24pTjNQch8HtMbZiujXSTd0VhotAHC2eCU0NvkkewY)
+  app-secret: ENC(5eaeLWQxt3YbgP/Ee8NFISvcwjOLXlSYRrY90RcxURNfULx2Kjt0dMUyZryP5kcoouUL/ee2P/6e1QMFuqi7iySIw9I96YO81pwLrKyMY2ZH9nqpEhmfyr3vFBNw+AjL6sdHDojt0vIupuJcXzeLsc7WIC9b//wCYEKNTwoG0EJyBrFc5JW9o8bjlwnevhc7aPDhX2o0SlPB31j4Eq6eAa8G68U6+gzXBd2JVyLpvS6Y4HsIdDl71wjYvf+3iVdy)
