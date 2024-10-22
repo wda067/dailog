@@ -1,20 +1,18 @@
 <template>
-  <div v-if="stockDetail && stockInformation"
+  <div v-if="stockDetail && stockInfo"
        style="width: 50%; height: 250px; position: relative;">
     <h2 style="font-weight: bolder">{{ props.ticker }}</h2>
-    <div class="text-muted" style="color: #555;">{{ stockInformation.name }} ·
+    <div class="text-muted" style="color: #555;">{{ stockInfo.name }} ·
       <span v-if="stockDetail.sector !== ''">
          {{ stockDetail.sector }}
       </span>
       <span v-else>ETF</span>
     </div>
-    <div class="mb-1">
-      <strong class="me-2" :style="getStyle(stockDetail.rate)">${{ stockDetail.last }}</strong>
-      <strong
-        :style="[getStyle(stockDetail.rate), { backgroundColor: '#f8f9fa', borderRadius: '10px', padding: '2px' }]">
-        {{ formatRate(stockDetail.rate) }}%
-      </strong>
-    </div>
+    <StockPrice
+      :last="stockDetail.last"
+      :diff="stockDetail.diff"
+      :rate="stockDetail.rate" />
+
     <StockChart :ticker="props.ticker"/>
     <br>
     <div class="detail-container">
@@ -56,14 +54,12 @@ import { onMounted, ref, watch } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import StockChart from '@/components/stock/StockChart.vue';
+import StockPrice from '@/components/stock/StockPrice.vue';
 
 //주식 데이터 타입 정의
 const stockDetail = ref<{
-  open: string;
-  high: string;
-  low: string;
   last: string;
-  base: string;
+  diff: string;
   marketCap: string;
   high52Weeks: string;
   high52WeeksDate: string;
@@ -78,7 +74,7 @@ const stockDetail = ref<{
   rate: string;
 }>();
 
-const stockInformation = ref<{
+const stockInfo = ref<{
   country: string;
   market: string;
   name: string;
@@ -104,8 +100,8 @@ const fetchStockDetail = async () => {
 
 const fetchStockInformation = async () => {
   try {
-    const { data } = await axios.get(`/api/stock/${props.ticker}/information`);
-    stockInformation.value = data;
+    const { data } = await axios.get(`/api/stock/${props.ticker}/info`);
+    stockInfo.value = data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
       const response = error.response;
@@ -124,30 +120,6 @@ const formatDate = (dateString: string): string => {
   const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return `${dateString.slice(0, 4)}/${dateString.slice(4, 6)}/${dateString.slice(6, 8)}` + ' ' + daysOfWeek[dayOfWeekNumber];
-};
-
-const getStyle = (rate: string | undefined) => {
-  if (rate === undefined) return {};
-  const rateNum = parseFloat(rate);
-
-  if (rateNum > 0) {
-    return { color: 'green' };
-  } else if (rateNum < 0) {
-    return { color: 'red' };
-  } else {
-    return { color: 'black' };
-  }
-};
-
-const formatRate = (rate: string | undefined) => {
-  if (rate === undefined) return '';
-  const rateNum = parseFloat(rate);
-
-  if (rateNum > 0) {
-    return `+${rateNum.toFixed(2)}`;
-  } else {
-    return rateNum.toFixed(2);
-  }
 };
 
 watch(() => props.ticker, async () => {
