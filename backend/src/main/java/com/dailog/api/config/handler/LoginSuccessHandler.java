@@ -6,8 +6,7 @@ import static com.dailog.api.constants.TokenExpirationTimeS.REFRESH_TOKEN_EXPIRA
 import static jakarta.servlet.http.HttpServletResponse.SC_OK;
 
 import com.dailog.api.domain.enums.Role;
-import com.dailog.api.service.RefreshTokenService;
-import com.dailog.api.service.ReissueService;
+import com.dailog.api.service.auth.RefreshTokenService;
 import com.dailog.api.util.CookieUtil;
 import com.dailog.api.util.JWTUtil;
 import jakarta.servlet.ServletException;

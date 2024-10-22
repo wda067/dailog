@@ -7,13 +7,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.dailog.api.domain.RefreshToken;
 import com.dailog.api.exception.InvalidRequest;
 import com.dailog.api.repository.RefreshTokenRepository;
+import com.dailog.api.service.auth.RefreshTokenService;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 

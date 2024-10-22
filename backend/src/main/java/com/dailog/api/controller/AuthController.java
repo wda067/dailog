@@ -1,7 +1,7 @@
 package com.dailog.api.controller;
 
-import com.dailog.api.service.ReissueService;
-import com.dailog.api.service.oAuth2.OAuth2JWTHeaderService;
+import com.dailog.api.service.auth.ReissueService;
+import com.dailog.api.service.auth.OAuth2JWTHeaderService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;

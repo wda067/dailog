@@ -1,7 +1,7 @@
 package com.dailog.api.config.filter;
 
 
-import com.dailog.api.service.RefreshTokenService;
+import com.dailog.api.service.auth.RefreshTokenService;
 import com.dailog.api.util.CookieUtil;
 import com.dailog.api.util.JWTUtil;
 import jakarta.servlet.FilterChain;
@@ -16,7 +16,6 @@ import java.util.Arrays;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.filter.GenericFilterBean;
 
 @RequiredArgsConstructor

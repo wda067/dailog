@@ -8,7 +8,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.dailog.api.domain.enums.Role;
 import com.dailog.api.request.oAuth2.CustomOAuth2User;
-import com.dailog.api.service.RefreshTokenService;
+import com.dailog.api.service.auth.RefreshTokenService;
 import com.dailog.api.util.CookieUtil;
 import com.dailog.api.util.JWTUtil;
 import jakarta.servlet.ServletException;
