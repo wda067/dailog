@@ -59,7 +59,6 @@ public class PostService {
         return new PostDetailResponse(post, getViews(postId));
     }
 
-    @Transactional
     public void viewPost(Long postId, HttpServletRequest request) {
         String key = "post:viewed:" + postId + ":" + getUserId(request);
 
@@ -97,8 +96,8 @@ public class PostService {
         return  (Integer) currentViews;
     }
 
-    //@Scheduled(cron = "0 0 5 * * ?")  //오전 5시에 실행
-    @Scheduled(cron = "0 */10 * * * ?")  //10분마다 실행
+    //@Scheduled(cron = "0 */10 * * * ?")  //10분마다 실행
+    @Scheduled(cron = "0 0 5 * * ?")  //오전 5시에 실행
     @Transactional
     public void updateViewsToDatabase() {
         log.info("Scheduled updateViewsToDatabase");
