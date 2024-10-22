@@ -3,6 +3,7 @@
     <div v-for="(detail, ticker) in stockDetails" :key="ticker">
       <h2 class="ticker-title">{{ ticker }}</h2>
       <StockPrice
+        style="margin-top: -15px;"
         :last="detail.last"
         :diff="detail.diff"
         :rate="detail.rate" />
