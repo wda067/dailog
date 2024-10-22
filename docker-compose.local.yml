@@ -23,6 +23,7 @@ services:
   cache-server:
     container_name: redis
     image: redis:alpine
+    pull_policy: missing
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
     command:
