@@ -1,4 +1,4 @@
-package com.dailog.api.service.oAuth2;
+package com.dailog.api.service.auth;
 
 import com.dailog.api.domain.Member;
 import com.dailog.api.domain.enums.Role;

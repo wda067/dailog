@@ -1,4 +1,4 @@
-package com.dailog.api.service.oAuth2;
+package com.dailog.api.service.auth;
 
 import static jakarta.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static jakarta.servlet.http.HttpServletResponse.SC_OK;

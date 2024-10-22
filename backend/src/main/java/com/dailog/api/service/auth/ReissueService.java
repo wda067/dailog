@@ -1,4 +1,4 @@
-package com.dailog.api.service;
+package com.dailog.api.service.auth;
 
 import static com.dailog.api.constants.TokenExpirationTimeS.REFRESH_TOKEN_EXPIRATION_TIME_S;
 import static com.dailog.api.constants.TokenExpirationTimeMs.ACCESS_TOKEN_EXPIRATION_TIME_MS;

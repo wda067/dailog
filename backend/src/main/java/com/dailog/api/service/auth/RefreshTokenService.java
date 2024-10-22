@@ -1,4 +1,4 @@
-package com.dailog.api.service;
+package com.dailog.api.service.auth;
 
 import com.dailog.api.domain.RefreshToken;
 import com.dailog.api.exception.InvalidRequest;
