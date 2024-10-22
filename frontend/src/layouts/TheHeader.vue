@@ -33,6 +33,7 @@
                   placeholder="주식 티커로 검색"
                   type="text"
                   @input="updateSearchTicker($event)"
+                  v-model="searchTicker"
                   style="width: 250px; height: 40px"
                 />
 <!--                <button class="btn btn-primary" type="submit">-->
