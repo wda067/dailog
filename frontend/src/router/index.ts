@@ -13,6 +13,7 @@ import AdminMemberDetailView from '@/views/admins/AdminMemberDetailView.vue';
 import OAuth2Redirect from '@/views/auth/OAuth2Redirect.vue';
 import { useAuthStore } from '@/stores/auth';
 import NotFoundView from '@/views/errors/NotFoundView.vue';
+import StockDetailView from '@/views/stock/StockDetailView.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -20,7 +21,7 @@ const router = createRouter({
     {
       path: '/',
       name: 'HomeView',
-      component: PostListView,
+      component: HomeView,
     },
     {
       path: '/login',
@@ -87,6 +88,12 @@ const router = createRouter({
       component: NotFoundView,
       props: true,
     },
+    {
+      path: '/stock/:ticker',
+      name: 'StockDetail',
+      component: StockDetailView,
+      props: (route) => ({ ticker: route.params.ticker }) //route.params.ticker를 props로 전달
+    }
   ],
 });
 
