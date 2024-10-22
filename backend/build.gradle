@@ -40,6 +40,7 @@ dependencies {
 	implementation 'org.springframework.security:spring-security-oauth2-client'
 	implementation 'com.github.ulisesbocchio:jasypt-spring-boot-starter:3.0.4'
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	implementation 'org.json:json:20240303'
 
 	//Spring Security
 	implementation 'org.springframework.boot:spring-boot-starter-security'
